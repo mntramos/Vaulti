@@ -1,0 +1,322 @@
+package com.vaulti.app.ui.screens
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.vaulti.app.data.database.entity.Account
+import com.vaulti.app.data.database.entity.AccountType
+import com.vaulti.app.viewmodel.AccountViewModel
+
+private enum class AccountSort {
+    NAME_ASC, NAME_DESC, BALANCE_ASC, BALANCE_DESC
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AccountsScreen(
+    viewModel: AccountViewModel,
+    onAccountClick: (Account) -> Unit
+) {
+    val accounts by viewModel.accounts.collectAsState()
+    val totalBalance by viewModel.totalBalance.collectAsState()
+
+    var showAddDialog by remember { mutableStateOf(false) }
+    var showSortMenu by remember { mutableStateOf(false) }
+    var sortOrder by remember { mutableStateOf(AccountSort.NAME_ASC) }
+
+    val sortedAccounts = remember(accounts, sortOrder) {
+        when (sortOrder) {
+            AccountSort.NAME_ASC -> accounts.sortedBy { it.name.lowercase() }
+            AccountSort.NAME_DESC -> accounts.sortedByDescending { it.name.lowercase() }
+            AccountSort.BALANCE_ASC -> accounts.sortedBy { it.balance }
+            AccountSort.BALANCE_DESC -> accounts.sortedByDescending { it.balance }
+        }
+    }
+
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = { showAddDialog = true }) {
+                Icon(Icons.Filled.Add, contentDescription = "Add Account")
+            }
+        }
+    ) { padding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Accounts",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Box {
+                        IconButton(onClick = { showSortMenu = true }) {
+                            Icon(Icons.Filled.FilterList, contentDescription = "Sort")
+                        }
+                        DropdownMenu(
+                            expanded = showSortMenu,
+                            onDismissRequest = { showSortMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Name (A-Z)", fontWeight = if (sortOrder == AccountSort.NAME_ASC) FontWeight.Bold else FontWeight.Normal) },
+                                onClick = { sortOrder = AccountSort.NAME_ASC; showSortMenu = false },
+                                leadingIcon = if (sortOrder == AccountSort.NAME_ASC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Name (Z-A)", fontWeight = if (sortOrder == AccountSort.NAME_DESC) FontWeight.Bold else FontWeight.Normal) },
+                                onClick = { sortOrder = AccountSort.NAME_DESC; showSortMenu = false },
+                                leadingIcon = if (sortOrder == AccountSort.NAME_DESC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Balance (High-Low)", fontWeight = if (sortOrder == AccountSort.BALANCE_DESC) FontWeight.Bold else FontWeight.Normal) },
+                                onClick = { sortOrder = AccountSort.BALANCE_DESC; showSortMenu = false },
+                                leadingIcon = if (sortOrder == AccountSort.BALANCE_DESC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Balance (Low-High)", fontWeight = if (sortOrder == AccountSort.BALANCE_ASC) FontWeight.Bold else FontWeight.Normal) },
+                                onClick = { sortOrder = AccountSort.BALANCE_ASC; showSortMenu = false },
+                                leadingIcon = if (sortOrder == AccountSort.BALANCE_ASC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Total Balance",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                            )
+                            Text(
+                                text = "₱${String.format("%,.2f", totalBalance)}",
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                        Text(
+                            text = "${accounts.size} accounts",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        )
+                    }
+                }
+            }
+
+            if (sortedAccounts.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 48.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "No accounts yet",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Tap + to add your first account",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+
+            items(sortedAccounts) { account ->
+                AccountDetailCard(
+                    account = account,
+                    onClick = { onAccountClick(account) }
+                )
+            }
+        }
+    }
+
+    if (showAddDialog) {
+        AddAccountDialog(
+            onDismiss = { showAddDialog = false },
+            onConfirm = { name, type, balance, color ->
+                viewModel.addAccount(name, type, balance, color)
+                showAddDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+private fun AccountDetailCard(
+    account: Account,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    modifier = Modifier.size(48.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    color = Color(account.color)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = account.name.take(1).uppercase(),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(
+                        text = account.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = account.type.displayName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Text(
+                text = "₱${String.format("%,.2f", account.balance)}",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddAccountDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String, AccountType, Double, Long) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var selectedType by remember { mutableStateOf(AccountType.CASH) }
+    var balance by remember { mutableStateOf("") }
+    var showTypeDropdown by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add Account") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Account Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                ExposedDropdownMenuBox(
+                    expanded = showTypeDropdown,
+                    onExpandedChange = { showTypeDropdown = it }
+                ) {
+                    OutlinedTextField(
+                        value = selectedType.displayName,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Type") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showTypeDropdown) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = showTypeDropdown,
+                        onDismissRequest = { showTypeDropdown = false }
+                    ) {
+                        AccountType.entries.forEach { type ->
+                            DropdownMenuItem(
+                                text = { Text(type.displayName) },
+                                onClick = {
+                                    selectedType = type
+                                    showTypeDropdown = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                OutlinedTextField(
+                    value = balance,
+                    onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) balance = it },
+                    label = { Text("Initial Balance") },
+                    prefix = { Text("₱") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    val balanceValue = balance.toDoubleOrNull() ?: 0.0
+                    onConfirm(name, selectedType, balanceValue, selectedType.defaultColor)
+                },
+                enabled = name.isNotBlank()
+            ) {
+                Text("Add")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
