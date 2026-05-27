@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="vaulti_primary">#FF6C63FF</color>
+    <color name="vaulti_secondary">#FF03DAC6</color>
+    <color name="vaulti_background">#FFF5F5FA</color>
+    <color name="vaulti_surface">#FFFFFFFF</color>
+    <color name="vaulti_on_primary">#FFFFFFFF</color>
+    <color name="vaulti_on_background">#FF1C1B1F</color>
+    <color name="vaulti_on_surface">#FF1C1B1F</color>
+</resources>
