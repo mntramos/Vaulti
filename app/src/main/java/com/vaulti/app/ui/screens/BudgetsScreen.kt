@@ -36,7 +36,7 @@ fun BudgetsScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf<Budget?>(null) }
     var showDeleteConfirm by remember { mutableStateOf<Budget?>(null) }
-    var sortOrder by remember { mutableStateOf(BudgetSort.valueOf(appPreferences.budgetsSort)) }
+    var sortOrder by remember { mutableStateOf(FormatUtils.safeValueOf(appPreferences.budgetsSort, BudgetSort.NAME_ASC)) }
     var showSortMenu by remember { mutableStateOf(false) }
 
     val sortedBudgets = remember(budgets, sortOrder) {
@@ -366,6 +366,7 @@ private fun AddBudgetDialog(
             TextButton(
                 onClick = {
                     val amountValue = amount.toDoubleOrNull() ?: return@TextButton
+                    if (amountValue <= 0) return@TextButton
                     onConfirm(name, amountValue, selectedPeriod, 0xFF6C63FF)
                 },
                 enabled = name.isNotBlank() && amount.isNotBlank()

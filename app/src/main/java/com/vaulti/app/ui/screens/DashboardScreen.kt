@@ -55,7 +55,7 @@ fun DashboardScreen(
 
     val accountMap = remember(accounts) { accounts.associateBy { it.id } }
     var showAccountSortMenu by remember { mutableStateOf(false) }
-    var accountSortOrder by remember { mutableStateOf(DashboardAccountSort.valueOf(appPreferences.dashboardAccountSort)) }
+    var accountSortOrder by remember { mutableStateOf(FormatUtils.safeValueOf(appPreferences.dashboardAccountSort, DashboardAccountSort.NAME_ASC)) }
 
     val sortedAccounts = remember(accounts, accountSortOrder) {
         when (accountSortOrder) {

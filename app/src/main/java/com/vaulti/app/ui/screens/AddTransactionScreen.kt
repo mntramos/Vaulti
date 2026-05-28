@@ -310,6 +310,7 @@ fun AddTransactionScreen(
             Button(
                 onClick = {
                     val amountValue = amount.toDoubleOrNull() ?: return@Button
+                    if (amountValue <= 0) return@Button
                     val account = selectedAccount ?: return@Button
                     val budgetId = if (selectedType == TransactionType.EXPENSE) selectedBudget?.id else null
                     if (isEditing && existingTransaction != null) {

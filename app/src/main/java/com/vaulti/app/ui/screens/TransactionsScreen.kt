@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.data.database.entity.TransactionType
+import com.vaulti.app.ui.FormatUtils
 import com.vaulti.app.ui.components.TransactionItem
 import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.viewmodel.TransactionViewModel
@@ -34,7 +35,7 @@ fun TransactionsScreen(
     val accountMap = remember(accounts) { accounts.associateBy { it.id } }
 
     var selectedFilterType by remember { mutableStateOf<TransactionType?>(null) }
-    var sortOrder by remember { mutableStateOf(SortOrder.valueOf(appPreferences.transactionsSort)) }
+    var sortOrder by remember { mutableStateOf(FormatUtils.safeValueOf(appPreferences.transactionsSort, SortOrder.DATE_DESC)) }
     var showSortMenu by remember { mutableStateOf(false) }
     var visibleCount by remember { mutableIntStateOf(appPreferences.transactionsPageSize) }
     var selectedIds by remember { mutableStateOf(setOf<Long>()) }

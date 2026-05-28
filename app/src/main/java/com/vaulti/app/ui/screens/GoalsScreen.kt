@@ -46,7 +46,7 @@ fun GoalsScreen(
     var showContributeDialog by remember { mutableStateOf<Goal?>(null) }
     var showDeleteConfirm by remember { mutableStateOf<Goal?>(null) }
     var selectedFilter by remember { mutableStateOf(GoalFilter.ALL) }
-    var sortOrder by remember { mutableStateOf(GoalSort.valueOf(appPreferences.goalsSort)) }
+    var sortOrder by remember { mutableStateOf(FormatUtils.safeValueOf(appPreferences.goalsSort, GoalSort.NAME_ASC)) }
     var showSortMenu by remember { mutableStateOf(false) }
 
     val filteredGoals = remember(goals, selectedFilter, sortOrder) {
@@ -244,7 +244,7 @@ fun GoalsScreen(
                         viewModel.updateProgress(goal.id, goal.currentAmount + amount)
                         showContributeDialog = null
                     },
-                    enabled = contributeAmount.toDoubleOrNull() != null && contributeAmount.toDoubleOrNull()!! > 0
+                    enabled = (contributeAmount.toDoubleOrNull() ?: 0.0) > 0
                 ) {
                     Text("Add")
                 }
@@ -479,6 +479,7 @@ private fun AddGoalDialog(
             TextButton(
                 onClick = {
                     val amountValue = targetAmount.toDoubleOrNull() ?: return@TextButton
+                    if (amountValue <= 0) return@TextButton
                     onConfirm(name, amountValue, if (hasTargetDate) targetDate else null, 0xFF6C63FF)
                 },
                 enabled = name.isNotBlank() && targetAmount.isNotBlank()

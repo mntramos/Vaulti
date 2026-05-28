@@ -32,9 +32,9 @@ android {
     signingConfigs {
         create("release") {
             storeFile = file("/Users/mark.ramos/Documents/Vaulti/release.keystore")
-            storePassword = "vaulti123"
-            keyAlias = "vaulti"
-            keyPassword = "vaulti123"
+            storePassword = System.getenv("VAULTI_STORE_PASSWORD") ?: "vaulti123"
+            keyAlias = System.getenv("VAULTI_KEY_ALIAS") ?: "vaulti"
+            keyPassword = System.getenv("VAULTI_KEY_PASSWORD") ?: "vaulti123"
         }
     }
 

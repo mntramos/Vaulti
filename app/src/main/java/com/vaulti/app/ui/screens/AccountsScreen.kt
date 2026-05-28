@@ -42,7 +42,7 @@ fun AccountsScreen(
 
     var showAddDialog by remember { mutableStateOf(false) }
     var showSortMenu by remember { mutableStateOf(false) }
-    var sortOrder by remember { mutableStateOf(AccountSort.valueOf(appPreferences.accountsSort)) }
+    var sortOrder by remember { mutableStateOf(FormatUtils.safeValueOf(appPreferences.accountsSort, AccountSort.NAME_ASC)) }
 
     val sortedAccounts = remember(accounts, sortOrder) {
         when (sortOrder) {
