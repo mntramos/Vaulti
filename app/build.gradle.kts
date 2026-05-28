@@ -31,7 +31,7 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("/Users/mark.ramos/Documents/Vaulti/release.keystore")
+            storeFile = rootProject.file("release.keystore")
             storePassword = System.getenv("VAULTI_STORE_PASSWORD") ?: "vaulti123"
             keyAlias = System.getenv("VAULTI_KEY_ALIAS") ?: "vaulti"
             keyPassword = System.getenv("VAULTI_KEY_PASSWORD") ?: "vaulti123"
