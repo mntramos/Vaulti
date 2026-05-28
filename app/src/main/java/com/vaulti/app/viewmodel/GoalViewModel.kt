@@ -54,13 +54,17 @@ class GoalViewModel @Inject constructor(
         color: Long = 0xFF6C63FF
     ) {
         viewModelScope.launch {
-            val isNowIncomplete = goal.isCompleted && targetAmount > goal.currentAmount
+            val newCompleted = when {
+                !goal.isCompleted && targetAmount <= goal.currentAmount -> true
+                goal.isCompleted && targetAmount > goal.currentAmount -> false
+                else -> goal.isCompleted
+            }
             goalRepository.update(goal.copy(
                 name = name,
                 targetAmount = targetAmount,
                 targetDate = targetDate,
                 color = color,
-                isCompleted = if (isNowIncomplete) false else goal.isCompleted
+                isCompleted = newCompleted
             ))
         }
     }
