@@ -9,6 +9,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -33,7 +35,8 @@ fun AccountDetailScreen(
     onNavigateBack: () -> Unit,
     onAddTransaction: (Long) -> Unit,
     onTransactionClick: (Transaction) -> Unit,
-    hideBalance: Boolean = false
+    hideBalance: Boolean = false,
+    onToggleBalancesHidden: () -> Unit = {}
 ) {
     val accounts by accountViewModel.accounts.collectAsState()
     val allTransactions by transactionViewModel.transactions.collectAsState()
@@ -126,11 +129,28 @@ fun AccountDetailScreen(
                                 .padding(24.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(
-                                text = account.type.displayName,
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = Color.White.copy(alpha = 0.8f)
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(start = 8.dp)
+                            ) {
+                                Text(
+                                    text = account.type.displayName,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = Color.White.copy(alpha = 0.8f)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                IconButton(
+                                    onClick = onToggleBalancesHidden,
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        if (hideBalance) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                        contentDescription = if (hideBalance) "Show balance" else "Hide balance",
+                                        tint = Color.White.copy(alpha = 0.8f),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = if (hideBalance) "₱***.**" else "₱${String.format(Locale.getDefault(), "%,.2f", account.balance)}",

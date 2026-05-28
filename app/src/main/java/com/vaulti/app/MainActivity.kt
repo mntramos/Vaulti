@@ -178,7 +178,8 @@ fun VaultiMainScreen(
                     onTransactionClick = { transaction ->
                         navController.navigate("edit_transaction/${transaction.id}")
                     },
-                    hideBalance = balancesHidden
+                    hideBalance = balancesHidden,
+                    onToggleBalancesHidden = onToggleBalancesHidden
                 )
             }
 
