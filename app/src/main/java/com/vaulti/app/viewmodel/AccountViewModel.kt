@@ -1,15 +1,17 @@
 package com.vaulti.app.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.vaulti.app.data.database.entity.Account
 import com.vaulti.app.data.database.entity.AccountType
 import com.vaulti.app.data.repository.AccountRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class AccountViewModel(
+@HiltViewModel
+class AccountViewModel @Inject constructor(
     private val accountRepository: AccountRepository
 ) : ViewModel() {
 
@@ -47,15 +49,6 @@ class AccountViewModel(
     fun deleteAccount(account: Account) {
         viewModelScope.launch {
             accountRepository.delete(account)
-        }
-    }
-
-    class Factory(
-        private val accountRepository: AccountRepository
-    ) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return AccountViewModel(accountRepository) as T
         }
     }
 }

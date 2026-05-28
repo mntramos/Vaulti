@@ -1,15 +1,17 @@
 package com.vaulti.app.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.vaulti.app.data.database.entity.Budget
 import com.vaulti.app.data.database.entity.BudgetPeriod
 import com.vaulti.app.data.repository.BudgetRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class BudgetViewModel(
+@HiltViewModel
+class BudgetViewModel @Inject constructor(
     private val budgetRepository: BudgetRepository
 ) : ViewModel() {
 
@@ -48,15 +50,6 @@ class BudgetViewModel(
     fun deleteBudget(budget: Budget) {
         viewModelScope.launch {
             budgetRepository.delete(budget)
-        }
-    }
-
-    class Factory(
-        private val budgetRepository: BudgetRepository
-    ) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return BudgetViewModel(budgetRepository) as T
         }
     }
 }

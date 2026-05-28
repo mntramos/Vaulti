@@ -1,7 +1,6 @@
 package com.vaulti.app.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.vaulti.app.data.database.entity.Account
 import com.vaulti.app.data.database.entity.Budget
@@ -10,10 +9,13 @@ import com.vaulti.app.data.database.entity.TransactionType
 import com.vaulti.app.data.repository.AccountRepository
 import com.vaulti.app.data.repository.BudgetRepository
 import com.vaulti.app.data.repository.TransactionRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class TransactionViewModel(
+@HiltViewModel
+class TransactionViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val accountRepository: AccountRepository,
     private val budgetRepository: BudgetRepository
@@ -161,17 +163,6 @@ class TransactionViewModel(
             if (transaction.type == TransactionType.EXPENSE) {
                 updateBudgetSpent(transaction.budgetId, -transaction.amount)
             }
-        }
-    }
-
-    class Factory(
-        private val transactionRepository: TransactionRepository,
-        private val accountRepository: AccountRepository,
-        private val budgetRepository: BudgetRepository
-    ) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return TransactionViewModel(transactionRepository, accountRepository, budgetRepository) as T
         }
     }
 }

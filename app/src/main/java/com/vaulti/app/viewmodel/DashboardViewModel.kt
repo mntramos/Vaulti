@@ -1,17 +1,19 @@
 package com.vaulti.app.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.vaulti.app.data.database.entity.Account
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.data.database.entity.TransactionType
 import com.vaulti.app.data.repository.AccountRepository
 import com.vaulti.app.data.repository.TransactionRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class DashboardViewModel(
+@HiltViewModel
+class DashboardViewModel @Inject constructor(
     accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository
 ) : ViewModel() {
@@ -51,16 +53,6 @@ class DashboardViewModel(
                 _monthlyExpense.value = expense
                 _monthlyIncome.value = income
             }
-        }
-    }
-
-    class Factory(
-        private val accountRepository: AccountRepository,
-        private val transactionRepository: TransactionRepository
-    ) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return DashboardViewModel(accountRepository, transactionRepository) as T
         }
     }
 }

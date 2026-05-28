@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -22,21 +22,22 @@ import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.ui.theme.ThemeMode
 import com.vaulti.app.ui.theme.VaultiTheme
 import com.vaulti.app.viewmodel.*
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @Inject lateinit var appPreferences: AppPreferences
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-        val app = application as VaultiApplication
-        val appPreferences = AppPreferences(this)
 
         setContent {
             var themeMode by remember { mutableStateOf(appPreferences.themeMode) }
 
             VaultiTheme(themeMode = themeMode) {
                 VaultiMainScreen(
-                    app = app,
                     appPreferences = appPreferences,
                     themeMode = themeMode,
                     onThemeChanged = { newMode ->
@@ -51,7 +52,6 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun VaultiMainScreen(
-    app: VaultiApplication,
     appPreferences: AppPreferences,
     themeMode: ThemeMode,
     onThemeChanged: (ThemeMode) -> Unit
@@ -70,21 +70,11 @@ fun VaultiMainScreen(
 
     val showBottomBar = currentRoute in listOf("dashboard", "transactions", "accounts", "budgets", "goals")
 
-    val dashboardViewModel: DashboardViewModel = viewModel(
-        factory = DashboardViewModel.Factory(app.accountRepository, app.transactionRepository)
-    )
-    val transactionViewModel: TransactionViewModel = viewModel(
-        factory = TransactionViewModel.Factory(app.transactionRepository, app.accountRepository, app.budgetRepository)
-    )
-    val accountViewModel: AccountViewModel = viewModel(
-        factory = AccountViewModel.Factory(app.accountRepository)
-    )
-    val budgetViewModel: BudgetViewModel = viewModel(
-        factory = BudgetViewModel.Factory(app.budgetRepository)
-    )
-    val goalViewModel: GoalViewModel = viewModel(
-        factory = GoalViewModel.Factory(app.goalRepository)
-    )
+    val dashboardViewModel: DashboardViewModel = hiltViewModel()
+    val transactionViewModel: TransactionViewModel = hiltViewModel()
+    val accountViewModel: AccountViewModel = hiltViewModel()
+    val budgetViewModel: BudgetViewModel = hiltViewModel()
+    val goalViewModel: GoalViewModel = hiltViewModel()
 
     Scaffold(
         bottomBar = {
@@ -220,7 +210,6 @@ fun VaultiMainScreen(
 
             composable("settings") {
                 SettingsScreen(
-                    app = app,
                     appPreferences = appPreferences,
                     themeMode = themeMode,
                     onThemeChanged = onThemeChanged,

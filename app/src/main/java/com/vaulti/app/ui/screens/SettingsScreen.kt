@@ -1,5 +1,6 @@
 package com.vaulti.app.ui.screens
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -24,9 +25,10 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
-import com.vaulti.app.VaultiApplication
 import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.ui.theme.ThemeMode
+import com.vaulti.app.viewmodel.SettingsViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -44,13 +46,13 @@ import com.vaulti.app.data.database.entity.TransactionType
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    app: VaultiApplication,
     appPreferences: AppPreferences,
     themeMode: ThemeMode,
     onThemeChanged: (ThemeMode) -> Unit,
     onNavigateBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val viewModel: SettingsViewModel = hiltViewModel()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -70,7 +72,7 @@ fun SettingsScreen(
         if (uri != null) {
             scope.launch {
                 try {
-                    exportData(app, uri)
+                    exportData(context, uri, viewModel)
                     snackbarHostState.showSnackbar("Data exported successfully", actionLabel = "Dismiss", duration = SnackbarDuration.Short)
                 } catch (e: Exception) {
                     snackbarHostState.showSnackbar("Export failed: ${e.message}", actionLabel = "Dismiss", duration = SnackbarDuration.Short)
@@ -85,7 +87,7 @@ fun SettingsScreen(
         if (uri != null) {
             scope.launch {
                 try {
-                    importData(app, uri)
+                    importData(context, uri, viewModel)
                     snackbarHostState.showSnackbar("Data imported successfully", actionLabel = "Dismiss", duration = SnackbarDuration.Short)
                 } catch (e: Exception) {
                     snackbarHostState.showSnackbar("Import failed: ${e.message}", actionLabel = "Dismiss", duration = SnackbarDuration.Short)
@@ -381,7 +383,7 @@ fun SettingsScreen(
                         showDeleteDialog = false
                         scope.launch {
                             withContext(Dispatchers.IO) {
-                                app.database.clearAllTables()
+                                viewModel.database.clearAllTables()
                             }
                             snackbarHostState.showSnackbar("All data deleted", actionLabel = "Dismiss", duration = SnackbarDuration.Short)
                         }
@@ -400,11 +402,11 @@ fun SettingsScreen(
     }
 }
 
-private suspend fun exportData(app: VaultiApplication, uri: Uri) {
-    val accounts = app.accountRepository.getAll().first()
-    val transactions = app.transactionRepository.getAll().first()
-    val budgets = app.budgetRepository.getAll().first()
-    val goals = app.goalRepository.getAll().first()
+private suspend fun exportData(context: Context, uri: Uri, viewModel: SettingsViewModel) {
+    val accounts = viewModel.accountRepository.getAll().first()
+    val transactions = viewModel.transactionRepository.getAll().first()
+    val budgets = viewModel.budgetRepository.getAll().first()
+    val goals = viewModel.goalRepository.getAll().first()
 
     val root = JSONObject()
     root.put("version", 1)
@@ -475,16 +477,15 @@ private suspend fun exportData(app: VaultiApplication, uri: Uri) {
     }
     root.put("goals", goalsArr)
 
-    val contentResolver = app.contentResolver
     withContext(Dispatchers.IO) {
-        contentResolver.openOutputStream(uri)?.use { outputStream ->
+        context.contentResolver.openOutputStream(uri)?.use { outputStream ->
             outputStream.write(root.toString(2).toByteArray())
         }
     }
 }
 
-private suspend fun importData(app: VaultiApplication, uri: Uri) {
-    val contentResolver = app.contentResolver
+private suspend fun importData(context: Context, uri: Uri, viewModel: SettingsViewModel) {
+    val contentResolver = context.contentResolver
     val jsonString = withContext(Dispatchers.IO) {
         contentResolver.openInputStream(uri)?.use { inputStream ->
             inputStream.bufferedReader().readText()
@@ -494,7 +495,7 @@ private suspend fun importData(app: VaultiApplication, uri: Uri) {
     val root = JSONObject(jsonString)
 
     withContext(Dispatchers.IO) {
-        app.database.clearAllTables()
+        viewModel.database.clearAllTables()
 
         val accountsArr = root.getJSONArray("accounts")
         for (i in 0 until accountsArr.length()) {
@@ -509,7 +510,7 @@ private suspend fun importData(app: VaultiApplication, uri: Uri) {
                 isArchived = obj.optBoolean("isArchived", false),
                 createdAt = obj.getLong("createdAt")
             )
-            app.accountRepository.insert(account)
+            viewModel.accountRepository.insert(account)
         }
 
         val transactionsArr = root.getJSONArray("transactions")
@@ -534,7 +535,7 @@ private suspend fun importData(app: VaultiApplication, uri: Uri) {
                 budgetId = budgetId,
                 createdAt = obj.getLong("createdAt")
             )
-            app.transactionRepository.insert(transaction)
+            viewModel.transactionRepository.insert(transaction)
         }
 
         val budgetsArr = root.getJSONArray("budgets")
@@ -550,7 +551,7 @@ private suspend fun importData(app: VaultiApplication, uri: Uri) {
                 startDate = obj.getLong("startDate"),
                 isActive = obj.optBoolean("isActive", true)
             )
-            app.budgetRepository.insert(budget)
+            viewModel.budgetRepository.insert(budget)
         }
 
         val goalsArr = root.getJSONArray("goals")
@@ -567,7 +568,7 @@ private suspend fun importData(app: VaultiApplication, uri: Uri) {
                 isCompleted = obj.optBoolean("isCompleted", false),
                 createdAt = obj.getLong("createdAt")
             )
-            app.goalRepository.insert(goal)
+            viewModel.goalRepository.insert(goal)
         }
     }
 }

@@ -6,11 +6,14 @@ import com.vaulti.app.data.repository.AccountRepository
 import com.vaulti.app.data.repository.BudgetRepository
 import com.vaulti.app.data.repository.GoalRepository
 import com.vaulti.app.data.repository.TransactionRepository
+import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
+@HiltAndroidApp
 class VaultiApplication : Application() {
-    val database: VaultiDatabase by lazy { VaultiDatabase.getDatabase(this) }
-    val accountRepository: AccountRepository by lazy { AccountRepository(database.accountDao()) }
-    val transactionRepository: TransactionRepository by lazy { TransactionRepository(database.transactionDao()) }
-    val budgetRepository: BudgetRepository by lazy { BudgetRepository(database.budgetDao()) }
-    val goalRepository: GoalRepository by lazy { GoalRepository(database.goalDao()) }
+    @Inject lateinit var database: VaultiDatabase
+    @Inject lateinit var accountRepository: AccountRepository
+    @Inject lateinit var transactionRepository: TransactionRepository
+    @Inject lateinit var budgetRepository: BudgetRepository
+    @Inject lateinit var goalRepository: GoalRepository
 }
