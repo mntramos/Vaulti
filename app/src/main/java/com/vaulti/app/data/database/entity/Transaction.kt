@@ -38,15 +38,3 @@ data class Transaction(
     val createdAt: Long = System.currentTimeMillis()
 )
 
-enum class TransactionType {
-    EXPENSE,
-    INCOME,
-    TRANSFER
-}
-
-enum class RecurringInterval {
-    DAILY,
-    WEEKLY,
-    MONTHLY,
-    YEARLY
-}

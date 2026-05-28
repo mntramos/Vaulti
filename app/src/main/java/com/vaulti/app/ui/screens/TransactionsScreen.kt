@@ -1,11 +1,14 @@
 package com.vaulti.app.ui.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,25 +19,28 @@ import androidx.compose.ui.unit.dp
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.data.database.entity.TransactionType
 import com.vaulti.app.ui.components.TransactionItem
+import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.viewmodel.TransactionViewModel
-
-enum class SortOrder { DATE_DESC, DATE_ASC, AMOUNT_DESC, AMOUNT_ASC }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionsScreen(
     viewModel: TransactionViewModel,
+    appPreferences: AppPreferences,
     onAddTransaction: () -> Unit,
     onTransactionClick: (Transaction) -> Unit
 ) {
     val allTransactions by viewModel.transactions.collectAsState()
     val accounts by viewModel.accounts.collectAsState()
-
     val accountMap = remember(accounts) { accounts.associateBy { it.id } }
 
     var selectedFilterType by remember { mutableStateOf<TransactionType?>(null) }
-    var sortOrder by remember { mutableStateOf(SortOrder.DATE_DESC) }
+    var sortOrder by remember { mutableStateOf(SortOrder.valueOf(appPreferences.transactionsSort)) }
     var showSortMenu by remember { mutableStateOf(false) }
+    var visibleCount by remember { mutableIntStateOf(appPreferences.transactionsPageSize) }
+    var selectedIds by remember { mutableStateOf(setOf<Long>()) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    val pageSize = appPreferences.transactionsPageSize
 
     val transactions = remember(allTransactions, selectedFilterType, sortOrder) {
         val filtered = if (selectedFilterType != null) {
@@ -48,6 +54,15 @@ fun TransactionsScreen(
             SortOrder.AMOUNT_DESC -> filtered.sortedByDescending { it.amount }
             SortOrder.AMOUNT_ASC -> filtered.sortedBy { it.amount }
         }
+    }
+
+    val visibleTransactions = remember(transactions, visibleCount) {
+        transactions.take(visibleCount)
+    }
+
+    fun resetPaging() {
+        visibleCount = pageSize
+        selectedIds = emptySet()
     }
 
     Scaffold(
@@ -114,6 +129,11 @@ fun TransactionsScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Row {
+                            if (selectedIds.isNotEmpty()) {
+                                IconButton(onClick = { showDeleteConfirm = true }) {
+                                    Icon(Icons.Filled.Delete, contentDescription = "Delete selected")
+                                }
+                            }
                             Box {
                                 IconButton(onClick = { showSortMenu = true }) {
                                     Icon(Icons.Filled.FilterList, contentDescription = "Sort")
@@ -124,22 +144,22 @@ fun TransactionsScreen(
                                 ) {
                                     DropdownMenuItem(
                                         text = { Text("Newest First", fontWeight = if (sortOrder == SortOrder.DATE_DESC) FontWeight.Bold else FontWeight.Normal) },
-                                        onClick = { sortOrder = SortOrder.DATE_DESC; showSortMenu = false },
+                                        onClick = { sortOrder = SortOrder.DATE_DESC; showSortMenu = false; appPreferences.transactionsSort = SortOrder.DATE_DESC.name; resetPaging() },
                                         leadingIcon = if (sortOrder == SortOrder.DATE_DESC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
                                     )
                                     DropdownMenuItem(
                                         text = { Text("Oldest First", fontWeight = if (sortOrder == SortOrder.DATE_ASC) FontWeight.Bold else FontWeight.Normal) },
-                                        onClick = { sortOrder = SortOrder.DATE_ASC; showSortMenu = false },
+                                        onClick = { sortOrder = SortOrder.DATE_ASC; showSortMenu = false; appPreferences.transactionsSort = SortOrder.DATE_ASC.name; resetPaging() },
                                         leadingIcon = if (sortOrder == SortOrder.DATE_ASC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
                                     )
                                     DropdownMenuItem(
                                         text = { Text("Highest Amount", fontWeight = if (sortOrder == SortOrder.AMOUNT_DESC) FontWeight.Bold else FontWeight.Normal) },
-                                        onClick = { sortOrder = SortOrder.AMOUNT_DESC; showSortMenu = false },
+                                        onClick = { sortOrder = SortOrder.AMOUNT_DESC; showSortMenu = false; appPreferences.transactionsSort = SortOrder.AMOUNT_DESC.name; resetPaging() },
                                         leadingIcon = if (sortOrder == SortOrder.AMOUNT_DESC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
                                     )
                                     DropdownMenuItem(
                                         text = { Text("Lowest Amount", fontWeight = if (sortOrder == SortOrder.AMOUNT_ASC) FontWeight.Bold else FontWeight.Normal) },
-                                        onClick = { sortOrder = SortOrder.AMOUNT_ASC; showSortMenu = false },
+                                        onClick = { sortOrder = SortOrder.AMOUNT_ASC; showSortMenu = false; appPreferences.transactionsSort = SortOrder.AMOUNT_ASC.name; resetPaging() },
                                         leadingIcon = if (sortOrder == SortOrder.AMOUNT_ASC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
                                     )
                                 }
@@ -156,15 +176,15 @@ fun TransactionsScreen(
                     ) {
                         FilterChip(
                             selected = selectedFilterType == null,
-                            onClick = { selectedFilterType = null },
+                            onClick = { selectedFilterType = null; resetPaging() },
                             label = { Text("All", fontWeight = if (selectedFilterType == null) FontWeight.Bold else FontWeight.Normal) },
                             leadingIcon = if (selectedFilterType == null) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
                         )
-                        TransactionType.entries.forEach { type ->
+                        TransactionType.entries.sortedBy { it.name }.forEach { type ->
                             val label = type.name.lowercase().replaceFirstChar { it.uppercase() }
                             FilterChip(
                                 selected = selectedFilterType == type,
-                                onClick = { selectedFilterType = if (selectedFilterType == type) null else type },
+                                onClick = { selectedFilterType = if (selectedFilterType == type) null else type; resetPaging() },
                                 label = { Text(label, fontWeight = if (selectedFilterType == type) FontWeight.Bold else FontWeight.Normal) },
                                 leadingIcon = if (selectedFilterType == type) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
                             )
@@ -173,15 +193,89 @@ fun TransactionsScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                items(transactions) { transaction ->
-                    TransactionItem(
-                        transaction = transaction,
-                        accountName = accountMap[transaction.accountId]?.name ?: "",
-                        toAccountName = if (transaction.toAccountId != null) accountMap[transaction.toAccountId]?.name ?: "" else "",
-                        onItemClick = { onTransactionClick(transaction) }
-                    )
+                items(visibleTransactions) { transaction ->
+                    val isSelected = transaction.id in selectedIds
+                    @OptIn(ExperimentalFoundationApi::class)
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .combinedClickable(
+                                onClick = {
+                                    if (selectedIds.isNotEmpty()) {
+                                        selectedIds = if (isSelected) selectedIds - transaction.id else selectedIds + transaction.id
+                                    } else {
+                                        onTransactionClick(transaction)
+                                    }
+                                },
+                                onLongClick = {
+                                    if (selectedIds.isEmpty()) {
+                                        selectedIds = setOf(transaction.id)
+                                    } else {
+                                        selectedIds = if (isSelected) selectedIds - transaction.id else selectedIds + transaction.id
+                                    }
+                                }
+                            ),
+                        colors = if (isSelected) CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        ) else CardDefaults.cardColors()
+                    ) {
+                        TransactionItem(
+                            transaction = transaction,
+                            accountName = accountMap[transaction.accountId]?.name ?: "",
+                            toAccountName = if (transaction.toAccountId != null) accountMap[transaction.toAccountId]?.name ?: "" else "",
+                            onItemClick = {
+                                if (selectedIds.isNotEmpty()) {
+                                    selectedIds = if (isSelected) selectedIds - transaction.id else selectedIds + transaction.id
+                                } else {
+                                    onTransactionClick(transaction)
+                                }
+                            }
+                        )
+                    }
+                }
+
+                if (visibleTransactions.size < transactions.size) {
+                    item {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            TextButton(
+                                onClick = { visibleCount += pageSize }
+                            ) {
+                                Text("See More (${transactions.size - visibleTransactions.size} remaining)")
+                            }
+                        }
+                    }
                 }
             }
         }
+    }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Delete Transactions") },
+            text = { Text("Are you sure you want to delete ${selectedIds.size} selected transaction(s)? This cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        selectedIds.forEach { id ->
+                            viewModel.deleteTransactionById(id)
+                        }
+                        selectedIds = emptySet()
+                        showDeleteConfirm = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

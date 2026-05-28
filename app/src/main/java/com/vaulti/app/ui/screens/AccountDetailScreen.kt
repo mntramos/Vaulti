@@ -1,6 +1,5 @@
 package com.vaulti.app.ui.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,13 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.vaulti.app.data.database.entity.Account
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.data.database.entity.TransactionType
 import com.vaulti.app.ui.components.TransactionItem
 import com.vaulti.app.viewmodel.AccountViewModel
 import com.vaulti.app.viewmodel.TransactionViewModel
-import kotlinx.coroutines.flow.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -35,7 +32,8 @@ fun AccountDetailScreen(
     accountViewModel: AccountViewModel,
     onNavigateBack: () -> Unit,
     onAddTransaction: (Long) -> Unit,
-    onTransactionClick: (Transaction) -> Unit
+    onTransactionClick: (Transaction) -> Unit,
+    hideBalance: Boolean = false
 ) {
     val accounts by accountViewModel.accounts.collectAsState()
     val allTransactions by transactionViewModel.transactions.collectAsState()
@@ -134,7 +132,7 @@ fun AccountDetailScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "₱${String.format("%,.2f", account.balance)}",
+                                text = if (hideBalance) "₱***.**" else "₱${String.format(Locale.getDefault(), "%,.2f", account.balance)}",
                                 style = MaterialTheme.typography.headlineLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -169,7 +167,7 @@ fun AccountDetailScreen(
                         label = { Text("All") },
                         leadingIcon = if (filterType == null) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
                     )
-                    TransactionType.entries.forEach { type ->
+                    TransactionType.entries.sortedBy { it.name }.forEach { type ->
                         val label = type.name.lowercase().replaceFirstChar { it.uppercase() }
                         FilterChip(
                             selected = filterType == type,

@@ -6,7 +6,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -14,11 +13,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.vaulti.app.data.database.entity.Account
+import java.util.Locale
 
 @Composable
 fun AccountCard(
     account: Account,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    hideBalance: Boolean = false
 ) {
     val backgroundColor = Color(account.color)
 
@@ -44,7 +45,7 @@ fun AccountCard(
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "₱${String.format("%,.2f", account.balance)}",
+                text = if (hideBalance) "₱***.**" else "₱${String.format(Locale.getDefault(), "%,.2f", account.balance)}",
                 style = MaterialTheme.typography.headlineMedium,
                 color = Color.White,
                 fontWeight = FontWeight.Bold,

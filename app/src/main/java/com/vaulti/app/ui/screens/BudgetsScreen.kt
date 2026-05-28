@@ -1,7 +1,6 @@
 package com.vaulti.app.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -16,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.vaulti.app.data.database.entity.Budget
 import com.vaulti.app.data.database.entity.BudgetPeriod
 import com.vaulti.app.viewmodel.BudgetViewModel
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -152,13 +152,13 @@ private fun BudgetCard(budget: Budget) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "₱${String.format("%,.2f", budget.spent)} spent",
+                    text = "₱${String.format(Locale.getDefault(),"%,.2f", budget.spent)} spent",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = if (isOverBudget) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "₱${String.format("%,.2f", budget.amount)}",
+                    text = "₱${String.format(Locale.getDefault(),"%,.2f", budget.amount)}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

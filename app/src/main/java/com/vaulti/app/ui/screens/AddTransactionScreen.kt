@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.vaulti.app.data.database.entity.Account
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.data.database.entity.TransactionType
 import com.vaulti.app.viewmodel.AccountViewModel
@@ -52,7 +51,7 @@ fun AddTransactionScreen(
         )
     }
     var amount by remember(existingTransaction) {
-        mutableStateOf(if (existingTransaction != null) String.format("%.2f", existingTransaction.amount) else "")
+        mutableStateOf(if (existingTransaction != null) String.format(Locale.getDefault(), "%.2f", existingTransaction.amount) else "")
     }
     var category by remember(existingTransaction) {
         mutableStateOf(existingTransaction?.category ?: "")
@@ -61,7 +60,7 @@ fun AddTransactionScreen(
         mutableStateOf(existingTransaction?.note ?: "")
     }
     var date by remember(existingTransaction) {
-        mutableStateOf(existingTransaction?.date ?: System.currentTimeMillis())
+        mutableLongStateOf(existingTransaction?.date ?: System.currentTimeMillis())
     }
 
     var showAccountDropdown by remember { mutableStateOf(false) }
@@ -145,9 +144,9 @@ fun AddTransactionScreen(
                     expanded = showAccountDropdown,
                     onDismissRequest = { showAccountDropdown = false }
                 ) {
-                    accounts.forEach { account ->
+                    accounts.sortedBy { it.name.lowercase() }.forEach { account ->
                         DropdownMenuItem(
-                            text = { Text("${account.name} (₱${String.format("%,.2f", account.balance)})") },
+                            text = { Text("${account.name} (₱${String.format(Locale.getDefault(),"%,.2f", account.balance)})") },
                             onClick = {
                                 selectedAccount = account
                                 showAccountDropdown = false
@@ -176,9 +175,9 @@ fun AddTransactionScreen(
                         expanded = showToAccountDropdown,
                         onDismissRequest = { showToAccountDropdown = false }
                     ) {
-                        filteredAccounts.forEach { account ->
+                        filteredAccounts.sortedBy { it.name.lowercase() }.forEach { account ->
                             DropdownMenuItem(
-                                text = { Text("${account.name} (₱${String.format("%,.2f", account.balance)})") },
+                                text = { Text("${account.name} (₱${String.format(Locale.getDefault(),"%,.2f", account.balance)})") },
                                 onClick = {
                                     selectedToAccount = account
                                     showToAccountDropdown = false

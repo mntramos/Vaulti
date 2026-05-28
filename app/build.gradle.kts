@@ -4,6 +4,13 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
+fun getSemverVersionCode(versionName: String): Int {
+    val parts = versionName.split(".")
+    return (parts.getOrElse(0) { "0" }.toInt() * 100000) +
+           (parts.getOrElse(1) { "0" }.toInt() * 1000) +
+           parts.getOrElse(2) { "0" }.toInt()
+}
+
 android {
     namespace = "com.vaulti.app"
     compileSdk = 34
@@ -12,7 +19,7 @@ android {
         applicationId = "com.vaulti.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
+        versionCode = getSemverVersionCode("0.1.0")
         versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -31,11 +38,24 @@ android {
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
         release {
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
+    }
+
+    applicationVariants.all {
+        val variant = this
+        variant.outputs
+            .map { it as com.android.build.gradle.internal.api.BaseVariantOutputImpl }
+            .forEach { output ->
+                output.outputFileName = "Vaulti-v${variant.versionName}-${variant.buildType.name}.apk"
+            }
     }
 
     compileOptions {

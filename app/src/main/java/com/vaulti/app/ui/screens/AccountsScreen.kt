@@ -8,6 +8,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,7 +20,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.vaulti.app.data.database.entity.Account
 import com.vaulti.app.data.database.entity.AccountType
+import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.viewmodel.AccountViewModel
+import java.util.Locale
 
 private enum class AccountSort {
     NAME_ASC, NAME_DESC, BALANCE_ASC, BALANCE_DESC
@@ -28,14 +32,17 @@ private enum class AccountSort {
 @Composable
 fun AccountsScreen(
     viewModel: AccountViewModel,
-    onAccountClick: (Account) -> Unit
+    appPreferences: AppPreferences,
+    onAccountClick: (Account) -> Unit,
+    hideBalance: Boolean = false,
+    onToggleBalancesHidden: () -> Unit = {}
 ) {
     val accounts by viewModel.accounts.collectAsState()
     val totalBalance by viewModel.totalBalance.collectAsState()
 
     var showAddDialog by remember { mutableStateOf(false) }
     var showSortMenu by remember { mutableStateOf(false) }
-    var sortOrder by remember { mutableStateOf(AccountSort.NAME_ASC) }
+    var sortOrder by remember { mutableStateOf(AccountSort.valueOf(appPreferences.accountsSort)) }
 
     val sortedAccounts = remember(accounts, sortOrder) {
         when (sortOrder) {
@@ -81,22 +88,22 @@ fun AccountsScreen(
                         ) {
                             DropdownMenuItem(
                                 text = { Text("Name (A-Z)", fontWeight = if (sortOrder == AccountSort.NAME_ASC) FontWeight.Bold else FontWeight.Normal) },
-                                onClick = { sortOrder = AccountSort.NAME_ASC; showSortMenu = false },
+                                onClick = { sortOrder = AccountSort.NAME_ASC; showSortMenu = false; appPreferences.accountsSort = AccountSort.NAME_ASC.name },
                                 leadingIcon = if (sortOrder == AccountSort.NAME_ASC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
                             )
                             DropdownMenuItem(
                                 text = { Text("Name (Z-A)", fontWeight = if (sortOrder == AccountSort.NAME_DESC) FontWeight.Bold else FontWeight.Normal) },
-                                onClick = { sortOrder = AccountSort.NAME_DESC; showSortMenu = false },
+                                onClick = { sortOrder = AccountSort.NAME_DESC; showSortMenu = false; appPreferences.accountsSort = AccountSort.NAME_DESC.name },
                                 leadingIcon = if (sortOrder == AccountSort.NAME_DESC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
                             )
                             DropdownMenuItem(
                                 text = { Text("Balance (High-Low)", fontWeight = if (sortOrder == AccountSort.BALANCE_DESC) FontWeight.Bold else FontWeight.Normal) },
-                                onClick = { sortOrder = AccountSort.BALANCE_DESC; showSortMenu = false },
+                                onClick = { sortOrder = AccountSort.BALANCE_DESC; showSortMenu = false; appPreferences.accountsSort = AccountSort.BALANCE_DESC.name },
                                 leadingIcon = if (sortOrder == AccountSort.BALANCE_DESC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
                             )
                             DropdownMenuItem(
                                 text = { Text("Balance (Low-High)", fontWeight = if (sortOrder == AccountSort.BALANCE_ASC) FontWeight.Bold else FontWeight.Normal) },
-                                onClick = { sortOrder = AccountSort.BALANCE_ASC; showSortMenu = false },
+                                onClick = { sortOrder = AccountSort.BALANCE_ASC; showSortMenu = false; appPreferences.accountsSort = AccountSort.BALANCE_ASC.name },
                                 leadingIcon = if (sortOrder == AccountSort.BALANCE_ASC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
                             )
                         }
@@ -117,13 +124,29 @@ fun AccountsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "Total Balance",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                IconButton(
+                                    onClick = onToggleBalancesHidden,
+                                    modifier = Modifier.size(24.dp)
+                                ) {
+                                    Icon(
+                                        if (hideBalance) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                        contentDescription = if (hideBalance) "Show balances" else "Hide balances",
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
                             Text(
-                                text = "Total Balance",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                            )
-                            Text(
-                                text = "₱${String.format("%,.2f", totalBalance)}",
+                                text = if (hideBalance) "₱***.**" else "₱${String.format(
+                                    Locale.getDefault(),
+                                    "%,.2f", totalBalance)}",
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -166,7 +189,8 @@ fun AccountsScreen(
             items(sortedAccounts) { account ->
                 AccountDetailCard(
                     account = account,
-                    onClick = { onAccountClick(account) }
+                    onClick = { onAccountClick(account) },
+                    hideBalance = hideBalance
                 )
             }
         }
@@ -186,7 +210,8 @@ fun AccountsScreen(
 @Composable
 private fun AccountDetailCard(
     account: Account,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    hideBalance: Boolean = false
 ) {
     Card(
         modifier = Modifier
@@ -230,7 +255,7 @@ private fun AccountDetailCard(
                 }
             }
             Text(
-                text = "₱${String.format("%,.2f", account.balance)}",
+                text = if (hideBalance) "₱***.**" else "₱${String.format(Locale.getDefault(),"%,.2f", account.balance)}",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
@@ -281,7 +306,7 @@ private fun AddAccountDialog(
                         expanded = showTypeDropdown,
                         onDismissRequest = { showTypeDropdown = false }
                     ) {
-                        AccountType.entries.forEach { type ->
+                        AccountType.entries.sortedBy { it.displayName }.forEach { type ->
                             DropdownMenuItem(
                                 text = { Text(type.displayName) },
                                 onClick = {

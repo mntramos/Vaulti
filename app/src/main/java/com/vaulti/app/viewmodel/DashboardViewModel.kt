@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class DashboardViewModel(
-    private val accountRepository: AccountRepository,
+    accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository
 ) : ViewModel() {
 
@@ -23,7 +23,8 @@ class DashboardViewModel(
         .map { it ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
-    val recentTransactions: StateFlow<List<Transaction>> = transactionRepository.getRecentTransactions(5)
+    val recentTransactions: StateFlow<List<Transaction>> = transactionRepository.getAll()
+        .map { it.sortedByDescending { t -> t.date } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _monthlyExpense = MutableStateFlow(0.0)

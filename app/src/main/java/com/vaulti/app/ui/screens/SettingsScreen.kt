@@ -22,7 +22,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import com.vaulti.app.VaultiApplication
+import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.ui.theme.ThemeMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -32,11 +35,17 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.core.net.toUri
+import com.vaulti.app.data.database.entity.AccountType
+import com.vaulti.app.data.database.entity.BudgetPeriod
+import com.vaulti.app.data.database.entity.RecurringInterval
+import com.vaulti.app.data.database.entity.TransactionType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     app: VaultiApplication,
+    appPreferences: AppPreferences,
     themeMode: ThemeMode,
     onThemeChanged: (ThemeMode) -> Unit,
     onNavigateBack: () -> Unit
@@ -50,6 +59,10 @@ fun SettingsScreen(
     val versionName = try {
         context.packageManager.getPackageInfo(packageName, 0).versionName ?: "Unknown"
     } catch (_: Exception) { "Unknown" }
+
+    var maxAccountsText by remember { mutableStateOf(appPreferences.maxVisibleAccounts.toString()) }
+    var maxRecentText by remember { mutableStateOf(appPreferences.maxRecentTransactions.toString()) }
+    var pageSizeText by remember { mutableStateOf(appPreferences.transactionsPageSize.toString()) }
 
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -147,6 +160,74 @@ fun SettingsScreen(
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
+                    text = "Display",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Max visible accounts on Home", style = MaterialTheme.typography.bodyMedium)
+                            OutlinedTextField(
+                                value = maxAccountsText,
+                                onValueChange = {
+                                    maxAccountsText = it
+                                    it.toIntOrNull()?.let { v -> appPreferences.maxVisibleAccounts = v }
+                                },
+                                modifier = Modifier.width(80.dp),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Recent transactions on Home", style = MaterialTheme.typography.bodyMedium)
+                            OutlinedTextField(
+                                value = maxRecentText,
+                                onValueChange = {
+                                    maxRecentText = it
+                                    it.toIntOrNull()?.let { v -> appPreferences.maxRecentTransactions = v }
+                                },
+                                modifier = Modifier.width(80.dp),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Transactions per page", style = MaterialTheme.typography.bodyMedium)
+                            OutlinedTextField(
+                                value = pageSizeText,
+                                onValueChange = {
+                                    pageSizeText = it
+                                    it.toIntOrNull()?.let { v -> appPreferences.transactionsPageSize = v }
+                                },
+                                modifier = Modifier.width(80.dp),
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true
+                            )
+                        }
+                    }
+                }
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
                     text = "Data",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
@@ -226,7 +307,7 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/vaulti-app/vaulti"))
+                                    val intent = Intent(Intent.ACTION_VIEW, "https://github.com/mntramos/Vaulti".toUri())
                                     context.startActivity(intent)
                                 },
                             verticalAlignment = Alignment.CenterVertically
@@ -423,7 +504,7 @@ private suspend fun importData(app: VaultiApplication, uri: Uri) {
             val account = com.vaulti.app.data.database.entity.Account(
                 id = obj.getLong("id"),
                 name = obj.getString("name"),
-                type = com.vaulti.app.data.database.entity.AccountType.valueOf(obj.getString("type")),
+                type = AccountType.valueOf(obj.getString("type")),
                 balance = obj.getDouble("balance"),
                 currency = obj.optString("currency", "PHP"),
                 color = obj.getLong("color"),
@@ -437,14 +518,14 @@ private suspend fun importData(app: VaultiApplication, uri: Uri) {
         for (i in 0 until transactionsArr.length()) {
             val obj = transactionsArr.getJSONObject(i)
             val toAccountId = if (obj.isNull("toAccountId")) null else obj.getLong("toAccountId")
-            val recurringInterval = if (obj.isNull("recurringInterval")) null else com.vaulti.app.data.database.entity.RecurringInterval.valueOf(obj.getString("recurringInterval"))
+            val recurringInterval = if (obj.isNull("recurringInterval")) null else RecurringInterval.valueOf(obj.getString("recurringInterval"))
             val imagePath = if (obj.isNull("imagePath")) null else obj.getString("imagePath")
             val transaction = com.vaulti.app.data.database.entity.Transaction(
                 id = obj.getLong("id"),
                 accountId = obj.getLong("accountId"),
                 toAccountId = toAccountId,
                 amount = obj.getDouble("amount"),
-                type = com.vaulti.app.data.database.entity.TransactionType.valueOf(obj.getString("type")),
+                type = TransactionType.valueOf(obj.getString("type")),
                 category = obj.getString("category"),
                 note = obj.optString("note", ""),
                 date = obj.getLong("date"),
@@ -465,7 +546,7 @@ private suspend fun importData(app: VaultiApplication, uri: Uri) {
                 amount = obj.getDouble("amount"),
                 spent = obj.optDouble("spent", 0.0),
                 category = obj.getString("category"),
-                period = com.vaulti.app.data.database.entity.BudgetPeriod.valueOf(obj.getString("period")),
+                period = BudgetPeriod.valueOf(obj.getString("period")),
                 color = obj.getLong("color"),
                 startDate = obj.getLong("startDate"),
                 isActive = obj.optBoolean("isActive", true)

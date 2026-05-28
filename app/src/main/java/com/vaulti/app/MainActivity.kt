@@ -18,8 +18,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.vaulti.app.ui.components.VaultiBottomNavBar
 import com.vaulti.app.ui.screens.*
+import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.ui.theme.ThemeMode
-import com.vaulti.app.ui.theme.ThemePreferences
 import com.vaulti.app.ui.theme.VaultiTheme
 import com.vaulti.app.viewmodel.*
 
@@ -29,18 +29,19 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val app = application as VaultiApplication
-        val themePreferences = ThemePreferences(this)
+        val appPreferences = AppPreferences(this)
 
         setContent {
-            var themeMode by remember { mutableStateOf(themePreferences.themeMode) }
+            var themeMode by remember { mutableStateOf(appPreferences.themeMode) }
 
             VaultiTheme(themeMode = themeMode) {
                 VaultiMainScreen(
                     app = app,
+                    appPreferences = appPreferences,
                     themeMode = themeMode,
                     onThemeChanged = { newMode ->
                         themeMode = newMode
-                        themePreferences.themeMode = newMode
+                        appPreferences.themeMode = newMode
                     }
                 )
             }
@@ -51,12 +52,19 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun VaultiMainScreen(
     app: VaultiApplication,
+    appPreferences: AppPreferences,
     themeMode: ThemeMode,
     onThemeChanged: (ThemeMode) -> Unit
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    var balancesHidden by remember { mutableStateOf(appPreferences.balancesHidden) }
+    val onToggleBalancesHidden: () -> Unit = {
+        balancesHidden = !balancesHidden
+        appPreferences.balancesHidden = balancesHidden
+    }
 
     val showBottomBar = currentRoute in listOf("dashboard", "transactions", "accounts", "budgets", "goals")
 
@@ -83,11 +91,10 @@ fun VaultiMainScreen(
                     currentRoute = currentRoute,
                     onItemSelected = { item ->
                         navController.navigate(item.route) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
+                            popUpTo("dashboard") {
+                                inclusive = false
                             }
                             launchSingleTop = true
-                            restoreState = true
                         }
                     }
                 )
@@ -102,6 +109,9 @@ fun VaultiMainScreen(
             composable("dashboard") {
                 DashboardScreen(
                     viewModel = dashboardViewModel,
+                    appPreferences = appPreferences,
+                    balancesHidden = balancesHidden,
+                    onToggleBalancesHidden = onToggleBalancesHidden,
                     onAddTransaction = { navController.navigate("add_transaction") },
                     onTransactionClick = { transaction ->
                         navController.navigate("edit_transaction/${transaction.id}")
@@ -118,6 +128,7 @@ fun VaultiMainScreen(
             composable("transactions") {
                 TransactionsScreen(
                     viewModel = transactionViewModel,
+                    appPreferences = appPreferences,
                     onAddTransaction = { navController.navigate("add_transaction") },
                     onTransactionClick = { transaction ->
                         navController.navigate("edit_transaction/${transaction.id}")
@@ -173,16 +184,20 @@ fun VaultiMainScreen(
                     },
                     onTransactionClick = { transaction ->
                         navController.navigate("edit_transaction/${transaction.id}")
-                    }
+                    },
+                    hideBalance = balancesHidden
                 )
             }
 
             composable("accounts") {
                 AccountsScreen(
                     viewModel = accountViewModel,
+                    appPreferences = appPreferences,
                     onAccountClick = { account ->
                         navController.navigate("account_detail/${account.id}")
-                    }
+                    },
+                    hideBalance = balancesHidden,
+                    onToggleBalancesHidden = onToggleBalancesHidden
                 )
             }
 
@@ -203,6 +218,7 @@ fun VaultiMainScreen(
             composable("settings") {
                 SettingsScreen(
                     app = app,
+                    appPreferences = appPreferences,
                     themeMode = themeMode,
                     onThemeChanged = onThemeChanged,
                     onNavigateBack = { navController.popBackStack() }

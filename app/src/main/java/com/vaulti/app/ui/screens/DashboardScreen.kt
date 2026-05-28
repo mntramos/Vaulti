@@ -17,11 +17,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import com.vaulti.app.data.database.entity.Account
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.ui.components.AccountCard
 import com.vaulti.app.ui.components.TransactionItem
+import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.viewmodel.DashboardViewModel
+import java.util.Locale
 
 private enum class DashboardAccountSort {
     NAME_ASC, NAME_DESC, BALANCE_ASC, BALANCE_DESC
@@ -31,6 +35,9 @@ private enum class DashboardAccountSort {
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel,
+    appPreferences: AppPreferences,
+    balancesHidden: Boolean = false,
+    onToggleBalancesHidden: () -> Unit = {},
     onAddTransaction: () -> Unit,
     onTransactionClick: (Transaction) -> Unit,
     onAccountClick: (Account) -> Unit,
@@ -40,14 +47,14 @@ fun DashboardScreen(
 ) {
     val accounts by viewModel.accounts.collectAsState()
     val totalBalance by viewModel.totalBalance.collectAsState()
-    val recentTransactions by viewModel.recentTransactions.collectAsState()
+    val allTransactions by viewModel.recentTransactions.collectAsState()
     val monthlyExpense by viewModel.monthlyExpense.collectAsState()
 
     val monthlyIncome by viewModel.monthlyIncome.collectAsState()
 
     val accountMap = remember(accounts) { accounts.associateBy { it.id } }
     var showAccountSortMenu by remember { mutableStateOf(false) }
-    var accountSortOrder by remember { mutableStateOf(DashboardAccountSort.NAME_ASC) }
+    var accountSortOrder by remember { mutableStateOf(DashboardAccountSort.valueOf(appPreferences.dashboardAccountSort)) }
 
     val sortedAccounts = remember(accounts, accountSortOrder) {
         when (accountSortOrder) {
@@ -57,6 +64,15 @@ fun DashboardScreen(
             DashboardAccountSort.BALANCE_DESC -> accounts.sortedByDescending { it.balance }
         }
     }
+
+    val maxVisible = appPreferences.maxVisibleAccounts
+    val maxRecent = appPreferences.maxRecentTransactions
+
+    val visibleRecentTransactions = remember(allTransactions, maxRecent) {
+        allTransactions.take(maxRecent)
+    }
+
+    fun formatAmount(amount: Double): String = if (balancesHidden) "₱***.**" else "₱${String.format(Locale.getDefault(),"%,.2f", amount)}"
 
     Scaffold(
         floatingActionButton = {
@@ -112,14 +128,28 @@ fun DashboardScreen(
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
-                            text = "Total Balance",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Total Balance",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            IconButton(
+                                onClick = onToggleBalancesHidden,
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    if (balancesHidden) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                    contentDescription = if (balancesHidden) "Show balances" else "Hide balances",
+                                    tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "₱${String.format("%,.2f", totalBalance)}",
+                            text = formatAmount(totalBalance),
                             style = MaterialTheme.typography.headlineLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimary
@@ -131,7 +161,7 @@ fun DashboardScreen(
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
-                                    text = "₱${String.format("%,.2f", monthlyIncome)}",
+                                    text = formatAmount(monthlyIncome),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimary
@@ -144,7 +174,7 @@ fun DashboardScreen(
                             }
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
-                                    text = "₱${String.format("%,.2f", monthlyExpense)}",
+                                    text = formatAmount(monthlyExpense),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimary
@@ -180,26 +210,26 @@ fun DashboardScreen(
                                 expanded = showAccountSortMenu,
                                 onDismissRequest = { showAccountSortMenu = false }
                             ) {
-                                DropdownMenuItem(
-                                    text = { Text("Name (A-Z)", fontWeight = if (accountSortOrder == DashboardAccountSort.NAME_ASC) FontWeight.Bold else FontWeight.Normal) },
-                                    onClick = { accountSortOrder = DashboardAccountSort.NAME_ASC; showAccountSortMenu = false },
-                                    leadingIcon = if (accountSortOrder == DashboardAccountSort.NAME_ASC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Name (Z-A)", fontWeight = if (accountSortOrder == DashboardAccountSort.NAME_DESC) FontWeight.Bold else FontWeight.Normal) },
-                                    onClick = { accountSortOrder = DashboardAccountSort.NAME_DESC; showAccountSortMenu = false },
-                                    leadingIcon = if (accountSortOrder == DashboardAccountSort.NAME_DESC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Balance (High-Low)", fontWeight = if (accountSortOrder == DashboardAccountSort.BALANCE_DESC) FontWeight.Bold else FontWeight.Normal) },
-                                    onClick = { accountSortOrder = DashboardAccountSort.BALANCE_DESC; showAccountSortMenu = false },
-                                    leadingIcon = if (accountSortOrder == DashboardAccountSort.BALANCE_DESC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("Balance (Low-High)", fontWeight = if (accountSortOrder == DashboardAccountSort.BALANCE_ASC) FontWeight.Bold else FontWeight.Normal) },
-                                    onClick = { accountSortOrder = DashboardAccountSort.BALANCE_ASC; showAccountSortMenu = false },
-                                    leadingIcon = if (accountSortOrder == DashboardAccountSort.BALANCE_ASC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
-                                )
+                                    DropdownMenuItem(
+                                        text = { Text("Name (A-Z)", fontWeight = if (accountSortOrder == DashboardAccountSort.NAME_ASC) FontWeight.Bold else FontWeight.Normal) },
+                                        onClick = { accountSortOrder = DashboardAccountSort.NAME_ASC; showAccountSortMenu = false; appPreferences.dashboardAccountSort = DashboardAccountSort.NAME_ASC.name },
+                                        leadingIcon = if (accountSortOrder == DashboardAccountSort.NAME_ASC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Name (Z-A)", fontWeight = if (accountSortOrder == DashboardAccountSort.NAME_DESC) FontWeight.Bold else FontWeight.Normal) },
+                                        onClick = { accountSortOrder = DashboardAccountSort.NAME_DESC; showAccountSortMenu = false; appPreferences.dashboardAccountSort = DashboardAccountSort.NAME_DESC.name },
+                                        leadingIcon = if (accountSortOrder == DashboardAccountSort.NAME_DESC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Balance (High-Low)", fontWeight = if (accountSortOrder == DashboardAccountSort.BALANCE_DESC) FontWeight.Bold else FontWeight.Normal) },
+                                        onClick = { accountSortOrder = DashboardAccountSort.BALANCE_DESC; showAccountSortMenu = false; appPreferences.dashboardAccountSort = DashboardAccountSort.BALANCE_DESC.name },
+                                        leadingIcon = if (accountSortOrder == DashboardAccountSort.BALANCE_DESC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Balance (Low-High)", fontWeight = if (accountSortOrder == DashboardAccountSort.BALANCE_ASC) FontWeight.Bold else FontWeight.Normal) },
+                                        onClick = { accountSortOrder = DashboardAccountSort.BALANCE_ASC; showAccountSortMenu = false; appPreferences.dashboardAccountSort = DashboardAccountSort.BALANCE_ASC.name },
+                                        leadingIcon = if (accountSortOrder == DashboardAccountSort.BALANCE_ASC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
+                                    )
                             }
                         }
                     }
@@ -210,15 +240,16 @@ fun DashboardScreen(
                         modifier = Modifier.height(120.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        items(sortedAccounts.take(3)) { account ->
+                        items(sortedAccounts.take(maxVisible)) { account ->
                             Box(modifier = Modifier.fillMaxHeight()) {
                                 AccountCard(
                                     account = account,
-                                    modifier = Modifier.clickable { onAccountClick(account) }
+                                    modifier = Modifier.clickable { onAccountClick(account) },
+                                    hideBalance = balancesHidden
                                 )
                             }
                         }
-                        if (accounts.size > 3) {
+                        if (accounts.size > maxVisible) {
                             item {
                                 Box(modifier = Modifier.fillMaxHeight()) {
                                     Card(
@@ -277,7 +308,7 @@ fun DashboardScreen(
                 }
             }
 
-            if (recentTransactions.isNotEmpty()) {
+            if (visibleRecentTransactions.isNotEmpty()) {
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -295,7 +326,7 @@ fun DashboardScreen(
                     }
                 }
 
-                items(recentTransactions) { transaction ->
+                items(visibleRecentTransactions) { transaction ->
                     TransactionItem(
                         transaction = transaction,
                         accountName = accountMap[transaction.accountId]?.name ?: "",

@@ -21,10 +21,10 @@ import java.util.*
 @Composable
 fun TransactionItem(
     transaction: Transaction,
+    modifier: Modifier = Modifier,
     accountName: String = "",
     toAccountName: String = "",
-    onItemClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    onItemClick: () -> Unit = {}
 ) {
     val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     val amountColor = when (transaction.type) {
@@ -108,7 +108,7 @@ fun TransactionItem(
             }
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = "$prefix₱${String.format("%,.2f", transaction.amount)}",
+                text = "$prefix₱${String.format(Locale.getDefault(), "%,.2f", transaction.amount)}",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = amountColor,

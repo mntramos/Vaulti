@@ -125,6 +125,14 @@ class TransactionViewModel(
         }
     }
 
+    fun deleteTransactionById(transactionId: Long) {
+        viewModelScope.launch {
+            val transaction = transactionRepository.getById(transactionId) ?: return@launch
+            transactionRepository.delete(transaction)
+            reverseTransaction(transaction.accountId, transaction.toAccountId, transaction.amount, transaction.type)
+        }
+    }
+
     class Factory(
         private val transactionRepository: TransactionRepository,
         private val accountRepository: AccountRepository

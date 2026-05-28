@@ -16,8 +16,3 @@ data class Budget(
     val isActive: Boolean = true
 )
 
-enum class BudgetPeriod {
-    WEEKLY,
-    MONTHLY,
-    YEARLY
-}

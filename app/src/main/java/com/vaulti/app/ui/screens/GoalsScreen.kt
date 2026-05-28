@@ -148,13 +148,13 @@ private fun GoalCard(goal: Goal) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "₱${String.format("%,.2f", goal.currentAmount)}",
+                    text = "₱${String.format(Locale.getDefault(),"%,.2f", goal.currentAmount)}",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color(goal.color)
                 )
                 Text(
-                    text = "₱${String.format("%,.2f", goal.targetAmount)}",
+                    text = "₱${String.format(Locale.getDefault(),"%,.2f", goal.targetAmount)}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -180,7 +180,7 @@ private fun AddGoalDialog(
     var targetAmount by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
     var hasTargetDate by remember { mutableStateOf(false) }
-    var targetDate by remember { mutableStateOf(System.currentTimeMillis()) }
+    var targetDate by remember { mutableLongStateOf(System.currentTimeMillis()) }
     val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
 
     AlertDialog(
