@@ -12,9 +12,6 @@ interface GoalDao {
     @Query("SELECT * FROM goals ORDER BY targetAmount ASC")
     fun getAll(): Flow<List<Goal>>
 
-    @Query("SELECT * FROM goals WHERE id = :id")
-    suspend fun getById(id: Long): Goal?
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(goal: Goal): Long
 
@@ -30,6 +27,4 @@ interface GoalDao {
     @Query("UPDATE goals SET isCompleted = 1 WHERE id = :id")
     suspend fun completeGoal(id: Long)
 
-    @Query("DELETE FROM goals")
-    suspend fun deleteAll()
 }

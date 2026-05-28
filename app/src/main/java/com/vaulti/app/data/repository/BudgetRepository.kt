@@ -12,5 +12,4 @@ class BudgetRepository(private val budgetDao: BudgetDao) {
     suspend fun update(budget: Budget) = budgetDao.update(budget)
     suspend fun delete(budget: Budget) = budgetDao.delete(budget)
     suspend fun updateSpent(id: Long, spent: Double) = budgetDao.updateSpent(id, spent)
-    suspend fun deleteAll() = budgetDao.deleteAll()
 }

@@ -31,15 +31,3 @@ val ExpenseRed = Color(0xFFFF4D6D)
 val IncomeGreen = Color(0xFF2ECC71)
 val TransferBlue = Color(0xFF3498DB)
 
-val CategoryColors = listOf(
-    Color(0xFF6C63FF),
-    Color(0xFFFF6B6B),
-    Color(0xFF4ECDC4),
-    Color(0xFFFFD93D),
-    Color(0xFF6BCB77),
-    Color(0xFF4D96FF),
-    Color(0xFFFF6F91),
-    Color(0xFF845EC2),
-    Color(0xFF00C9A7),
-    Color(0xFFFF9671)
-)
