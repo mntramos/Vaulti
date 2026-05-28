@@ -39,6 +39,7 @@ fun TransactionsScreen(
     var visibleCount by remember { mutableIntStateOf(appPreferences.transactionsPageSize) }
     var selectedIds by remember { mutableStateOf(setOf<Long>()) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    var showSingleDeleteConfirm by remember { mutableStateOf<Transaction?>(null) }
 
     val pageSize = appPreferences.transactionsPageSize
 
@@ -203,8 +204,6 @@ fun TransactionsScreen(
                                 onClick = {
                                     if (selectedIds.isNotEmpty()) {
                                         selectedIds = if (isSelected) selectedIds - transaction.id else selectedIds + transaction.id
-                                    } else {
-                                        onTransactionClick(transaction)
                                     }
                                 },
                                 onLongClick = {
@@ -223,13 +222,8 @@ fun TransactionsScreen(
                             transaction = transaction,
                             accountName = accountMap[transaction.accountId]?.name ?: "",
                             toAccountName = if (transaction.toAccountId != null) accountMap[transaction.toAccountId]?.name ?: "" else "",
-                            onItemClick = {
-                                if (selectedIds.isNotEmpty()) {
-                                    selectedIds = if (isSelected) selectedIds - transaction.id else selectedIds + transaction.id
-                                } else {
-                                    onTransactionClick(transaction)
-                                }
-                            }
+                            onEditClick = { onTransactionClick(transaction) },
+                            onDeleteClick = { showSingleDeleteConfirm = transaction }
                         )
                     }
                 }
@@ -250,6 +244,30 @@ fun TransactionsScreen(
                 }
             }
         }
+    }
+
+    showSingleDeleteConfirm?.let { transaction ->
+        AlertDialog(
+            onDismissRequest = { showSingleDeleteConfirm = null },
+            title = { Text("Delete Transaction") },
+            text = { Text("Are you sure you want to delete this transaction? This cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteTransaction(transaction)
+                        showSingleDeleteConfirm = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSingleDeleteConfirm = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     if (showDeleteConfirm) {

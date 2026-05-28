@@ -28,13 +28,12 @@ sealed class BottomNavItem(
     data object Goals : BottomNavItem("goals", "Goals", Icons.Filled.Savings, Icons.Outlined.Savings)
 }
 
-// TODO: Implement Budgets and Goals
 val bottomNavItems = listOf(
     BottomNavItem.Dashboard,
     BottomNavItem.Transactions,
     BottomNavItem.Accounts,
-//    BottomNavItem.Budgets,
-//    BottomNavItem.Goals
+    BottomNavItem.Budgets,
+    BottomNavItem.Goals
 )
 
 @Composable

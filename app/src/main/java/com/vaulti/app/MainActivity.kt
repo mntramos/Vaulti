@@ -5,17 +5,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.ui.components.VaultiBottomNavBar
 import com.vaulti.app.ui.screens.*
 import com.vaulti.app.ui.theme.AppPreferences
@@ -66,13 +66,15 @@ fun VaultiMainScreen(
         appPreferences.balancesHidden = balancesHidden
     }
 
+    var transactionToDelete by remember { mutableStateOf<Transaction?>(null) }
+
     val showBottomBar = currentRoute in listOf("dashboard", "transactions", "accounts", "budgets", "goals")
 
     val dashboardViewModel: DashboardViewModel = viewModel(
         factory = DashboardViewModel.Factory(app.accountRepository, app.transactionRepository)
     )
     val transactionViewModel: TransactionViewModel = viewModel(
-        factory = TransactionViewModel.Factory(app.transactionRepository, app.accountRepository)
+        factory = TransactionViewModel.Factory(app.transactionRepository, app.accountRepository, app.budgetRepository)
     )
     val accountViewModel: AccountViewModel = viewModel(
         factory = AccountViewModel.Factory(app.accountRepository)
@@ -119,6 +121,7 @@ fun VaultiMainScreen(
                     onAccountClick = { account ->
                         navController.navigate("account_detail/${account.id}")
                     },
+                    onTransactionDelete = { transactionToDelete = it },
                     onSeeAllTransactions = { navController.navigate("transactions") },
                     onSeeAllAccounts = { navController.navigate("accounts") },
                     onSettingsClick = { navController.navigate("settings") }
@@ -201,19 +204,19 @@ fun VaultiMainScreen(
                 )
             }
 
-            // TODO: Not yet implemented
-//            composable("budgets") {
-//                BudgetsScreen(
-//                    viewModel = budgetViewModel
-//                )
-//            }
+            composable("budgets") {
+                BudgetsScreen(
+                    viewModel = budgetViewModel,
+                    appPreferences = appPreferences
+                )
+            }
 
-            // TODO: Not yet implemented
-//            composable("goals") {
-//                GoalsScreen(
-//                    viewModel = goalViewModel
-//                )
-//            }
+            composable("goals") {
+                GoalsScreen(
+                    viewModel = goalViewModel,
+                    appPreferences = appPreferences
+                )
+            }
 
             composable("settings") {
                 SettingsScreen(
@@ -225,5 +228,29 @@ fun VaultiMainScreen(
                 )
             }
         }
+    }
+
+    transactionToDelete?.let { transaction ->
+        AlertDialog(
+            onDismissRequest = { transactionToDelete = null },
+            title = { Text("Delete Transaction") },
+            text = { Text("Are you sure you want to delete this transaction? This cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        transactionViewModel.deleteTransaction(transaction)
+                        transactionToDelete = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { transactionToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }

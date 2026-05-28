@@ -15,7 +15,7 @@ import com.vaulti.app.data.database.entity.Transaction
 
 @Database(
     entities = [Account::class, Transaction::class, Budget::class, Goal::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class VaultiDatabase : RoomDatabase() {

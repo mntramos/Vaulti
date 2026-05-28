@@ -439,6 +439,7 @@ private suspend fun exportData(app: VaultiApplication, uri: Uri) {
             put("isRecurring", t.isRecurring)
             put("recurringInterval", t.recurringInterval?.name ?: JSONObject.NULL)
             put("imagePath", t.imagePath ?: JSONObject.NULL)
+            put("budgetId", t.budgetId ?: JSONObject.NULL)
             put("createdAt", t.createdAt)
         })
     }
@@ -451,7 +452,6 @@ private suspend fun exportData(app: VaultiApplication, uri: Uri) {
             put("name", b.name)
             put("amount", b.amount)
             put("spent", b.spent)
-            put("category", b.category)
             put("period", b.period.name)
             put("color", b.color)
             put("startDate", b.startDate)
@@ -468,9 +468,7 @@ private suspend fun exportData(app: VaultiApplication, uri: Uri) {
             put("targetAmount", g.targetAmount)
             put("currentAmount", g.currentAmount)
             put("targetDate", g.targetDate ?: JSONObject.NULL)
-            put("category", g.category)
             put("color", g.color)
-            put("icon", g.icon)
             put("isCompleted", g.isCompleted)
             put("createdAt", g.createdAt)
         })
@@ -520,6 +518,7 @@ private suspend fun importData(app: VaultiApplication, uri: Uri) {
             val toAccountId = if (obj.isNull("toAccountId")) null else obj.getLong("toAccountId")
             val recurringInterval = if (obj.isNull("recurringInterval")) null else RecurringInterval.valueOf(obj.getString("recurringInterval"))
             val imagePath = if (obj.isNull("imagePath")) null else obj.getString("imagePath")
+            val budgetId = if (obj.isNull("budgetId")) null else obj.getLong("budgetId")
             val transaction = com.vaulti.app.data.database.entity.Transaction(
                 id = obj.getLong("id"),
                 accountId = obj.getLong("accountId"),
@@ -532,6 +531,7 @@ private suspend fun importData(app: VaultiApplication, uri: Uri) {
                 isRecurring = obj.optBoolean("isRecurring", false),
                 recurringInterval = recurringInterval,
                 imagePath = imagePath,
+                budgetId = budgetId,
                 createdAt = obj.getLong("createdAt")
             )
             app.transactionRepository.insert(transaction)
@@ -545,7 +545,6 @@ private suspend fun importData(app: VaultiApplication, uri: Uri) {
                 name = obj.getString("name"),
                 amount = obj.getDouble("amount"),
                 spent = obj.optDouble("spent", 0.0),
-                category = obj.getString("category"),
                 period = BudgetPeriod.valueOf(obj.getString("period")),
                 color = obj.getLong("color"),
                 startDate = obj.getLong("startDate"),
@@ -564,9 +563,7 @@ private suspend fun importData(app: VaultiApplication, uri: Uri) {
                 targetAmount = obj.getDouble("targetAmount"),
                 currentAmount = obj.optDouble("currentAmount", 0.0),
                 targetDate = targetDate,
-                category = obj.optString("category", ""),
                 color = obj.getLong("color"),
-                icon = obj.optString("icon", "savings"),
                 isCompleted = obj.optBoolean("isCompleted", false),
                 createdAt = obj.getLong("createdAt")
             )

@@ -19,7 +19,6 @@ class GoalViewModel(
         name: String,
         targetAmount: Double,
         targetDate: Long? = null,
-        category: String = "",
         color: Long = 0xFF6C63FF
     ) {
         viewModelScope.launch {
@@ -27,7 +26,6 @@ class GoalViewModel(
                 name = name,
                 targetAmount = targetAmount,
                 targetDate = targetDate,
-                category = category,
                 color = color
             )
             goalRepository.insert(goal)
@@ -37,6 +35,31 @@ class GoalViewModel(
     fun updateProgress(goalId: Long, amount: Double) {
         viewModelScope.launch {
             goalRepository.updateProgress(goalId, amount)
+        }
+    }
+
+    fun completeGoal(goalId: Long) {
+        viewModelScope.launch {
+            goalRepository.completeGoal(goalId)
+        }
+    }
+
+    fun updateGoal(
+        goal: Goal,
+        name: String,
+        targetAmount: Double,
+        targetDate: Long? = null,
+        color: Long = 0xFF6C63FF
+    ) {
+        viewModelScope.launch {
+            val isNowIncomplete = goal.isCompleted && targetAmount > goal.currentAmount
+            goalRepository.update(goal.copy(
+                name = name,
+                targetAmount = targetAmount,
+                targetDate = targetDate,
+                color = color,
+                isCompleted = if (isNowIncomplete) false else goal.isCompleted
+            ))
         }
     }
 

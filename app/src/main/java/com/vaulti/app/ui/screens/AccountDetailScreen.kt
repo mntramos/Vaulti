@@ -230,7 +230,8 @@ fun AccountDetailScreen(
                     transaction = transaction,
                     accountName = accountMap[transaction.accountId]?.name ?: "",
                     toAccountName = if (transaction.toAccountId != null) accountMap[transaction.toAccountId]?.name ?: "" else "",
-                    onItemClick = { onTransactionClick(transaction) }
+                    onEditClick = { onTransactionClick(transaction) },
+                    onDeleteClick = { onTransactionClick(transaction) }
                 )
             }
         }

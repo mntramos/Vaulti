@@ -9,7 +9,6 @@ data class Budget(
     val name: String,
     val amount: Double,
     val spent: Double = 0.0,
-    val category: String,
     val period: BudgetPeriod,
     val color: Long = 0xFF6C63FF,
     val startDate: Long = System.currentTimeMillis(),

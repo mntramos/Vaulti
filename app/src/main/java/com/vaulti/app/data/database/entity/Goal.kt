@@ -10,9 +10,7 @@ data class Goal(
     val targetAmount: Double,
     val currentAmount: Double = 0.0,
     val targetDate: Long? = null,
-    val category: String = "",
     val color: Long = 0xFF6C63FF,
-    val icon: String = "savings",
     val isCompleted: Boolean = false,
     val createdAt: Long = System.currentTimeMillis()
 )

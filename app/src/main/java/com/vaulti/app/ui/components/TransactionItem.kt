@@ -1,6 +1,9 @@
 package com.vaulti.app.ui.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,7 +27,8 @@ fun TransactionItem(
     modifier: Modifier = Modifier,
     accountName: String = "",
     toAccountName: String = "",
-    onItemClick: () -> Unit = {}
+    onEditClick: () -> Unit = {},
+    onDeleteClick: () -> Unit = {}
 ) {
     val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     val amountColor = when (transaction.type) {
@@ -39,7 +43,6 @@ fun TransactionItem(
     }
 
     Card(
-        onClick = onItemClick,
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -49,9 +52,9 @@ fun TransactionItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(IntrinsicSize.Min)
                 .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -107,13 +110,27 @@ fun TransactionItem(
                 }
             }
             Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = "$prefix₱${String.format(Locale.getDefault(), "%,.2f", transaction.amount)}",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = amountColor,
-                maxLines = 1
-            )
+            Column(
+                modifier = Modifier.fillMaxHeight(),
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onEditClick, modifier = Modifier.size(24.dp)) {
+                        Icon(Icons.Filled.Edit, contentDescription = "Edit transaction", modifier = Modifier.size(18.dp))
+                    }
+                    IconButton(onClick = onDeleteClick, modifier = Modifier.size(24.dp)) {
+                        Icon(Icons.Filled.Delete, contentDescription = "Delete transaction", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
+                    }
+                }
+                Text(
+                    text = "$prefix₱${String.format(Locale.getDefault(), "%,.2f", transaction.amount)}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = amountColor,
+                    maxLines = 1
+                )
+            }
         }
     }
 }

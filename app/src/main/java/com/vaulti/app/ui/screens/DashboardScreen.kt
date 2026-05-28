@@ -40,6 +40,7 @@ fun DashboardScreen(
     onToggleBalancesHidden: () -> Unit = {},
     onAddTransaction: () -> Unit,
     onTransactionClick: (Transaction) -> Unit,
+    onTransactionDelete: (Transaction) -> Unit = {},
     onAccountClick: (Account) -> Unit,
     onSeeAllTransactions: () -> Unit,
     onSeeAllAccounts: () -> Unit,
@@ -331,7 +332,8 @@ fun DashboardScreen(
                         transaction = transaction,
                         accountName = accountMap[transaction.accountId]?.name ?: "",
                         toAccountName = if (transaction.toAccountId != null) accountMap[transaction.toAccountId]?.name ?: "" else "",
-                        onItemClick = { onTransactionClick(transaction) }
+                        onEditClick = { onTransactionClick(transaction) },
+                        onDeleteClick = { onTransactionDelete(transaction) }
                     )
                 }
             }

@@ -35,6 +35,7 @@ data class Transaction(
     val isRecurring: Boolean = false,
     val recurringInterval: RecurringInterval? = null,
     val imagePath: String? = null,
+    val budgetId: Long? = null,
     val createdAt: Long = System.currentTimeMillis()
 )
 

@@ -12,5 +12,6 @@ class GoalRepository(private val goalDao: GoalDao) {
     suspend fun update(goal: Goal) = goalDao.update(goal)
     suspend fun delete(goal: Goal) = goalDao.delete(goal)
     suspend fun updateProgress(id: Long, amount: Double) = goalDao.updateProgress(id, amount)
+    suspend fun completeGoal(id: Long) = goalDao.completeGoal(id)
     suspend fun deleteAll() = goalDao.deleteAll()
 }

@@ -19,7 +19,6 @@ class BudgetViewModel(
     fun addBudget(
         name: String,
         amount: Double,
-        category: String,
         period: BudgetPeriod,
         color: Long = 0xFF6C63FF
     ) {
@@ -27,11 +26,22 @@ class BudgetViewModel(
             val budget = Budget(
                 name = name,
                 amount = amount,
-                category = category,
                 period = period,
                 color = color
             )
             budgetRepository.insert(budget)
+        }
+    }
+
+    fun updateBudget(
+        budget: Budget,
+        name: String,
+        amount: Double,
+        period: BudgetPeriod,
+        color: Long = 0xFF6C63FF
+    ) {
+        viewModelScope.launch {
+            budgetRepository.update(budget.copy(name = name, amount = amount, period = period, color = color))
         }
     }
 

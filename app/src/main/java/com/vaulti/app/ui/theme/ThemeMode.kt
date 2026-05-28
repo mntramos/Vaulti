@@ -39,6 +39,14 @@ class AppPreferences(context: Context) {
         get() = prefs.getString("accounts_sort", "NAME_ASC") ?: "NAME_ASC"
         set(value) = prefs.edit { putString("accounts_sort", value) }
 
+    var budgetsSort: String
+        get() = prefs.getString("budgets_sort", "AMOUNT_DESC") ?: "AMOUNT_DESC"
+        set(value) = prefs.edit { putString("budgets_sort", value) }
+
+    var goalsSort: String
+        get() = prefs.getString("goals_sort", "TARGET_DESC") ?: "TARGET_DESC"
+        set(value) = prefs.edit { putString("goals_sort", value) }
+
     var balancesHidden: Boolean
         get() = prefs.getBoolean("balances_hidden", false)
         set(value) = prefs.edit {putBoolean("balances_hidden", value) }

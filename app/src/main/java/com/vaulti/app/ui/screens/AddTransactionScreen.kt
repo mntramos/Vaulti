@@ -8,14 +8,17 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.vaulti.app.data.database.entity.Budget
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.data.database.entity.TransactionType
+import com.vaulti.app.ui.categories
 import com.vaulti.app.viewmodel.AccountViewModel
 import com.vaulti.app.viewmodel.TransactionViewModel
 import java.text.SimpleDateFormat
@@ -31,6 +34,7 @@ fun AddTransactionScreen(
     preselectedAccountId: Long = -1L
 ) {
     val accounts by accountViewModel.accounts.collectAsState()
+    val budgets by transactionViewModel.budgets.collectAsState()
     val isEditing = existingTransaction != null
 
     var selectedType by remember(existingTransaction) {
@@ -63,8 +67,14 @@ fun AddTransactionScreen(
         mutableLongStateOf(existingTransaction?.date ?: System.currentTimeMillis())
     }
 
+    var selectedBudget by remember(existingTransaction, budgets) {
+        mutableStateOf(
+            existingTransaction?.let { tx -> budgets.find { it.id == tx.budgetId } }
+        )
+    }
     var showAccountDropdown by remember { mutableStateOf(false) }
     var showToAccountDropdown by remember { mutableStateOf(false) }
+    var showBudgetDropdown by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
 
     val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
@@ -80,16 +90,7 @@ fun AddTransactionScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
-                actions = {
-                    if (isEditing) {
-                        IconButton(onClick = {
-                            existingTransaction?.let { transactionViewModel.deleteTransaction(it) }
-                            onNavigateBack()
-                        }) {
-                            Icon(Icons.Filled.Delete, contentDescription = "Delete")
-                        }
-                    }
-                }
+                actions = {}
             )
         }
     ) { padding ->
@@ -197,11 +198,6 @@ fun AddTransactionScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            val categories = listOf(
-                "Food & Drinks", "Transportation", "Shopping", "Bills & Utilities",
-                "Entertainment", "Health", "Education", "Salary", "Freelance", "Transfer", "Other"
-            )
-
             Text("Category", style = MaterialTheme.typography.bodyLarge)
 
             FlowRow(
@@ -215,6 +211,47 @@ fun AddTransactionScreen(
                         onClick = { category = cat },
                         label = { Text(cat, style = MaterialTheme.typography.bodySmall) }
                     )
+                }
+            }
+
+            if (selectedType == TransactionType.EXPENSE && budgets.isNotEmpty()) {
+                ExposedDropdownMenuBox(
+                    expanded = showBudgetDropdown,
+                    onExpandedChange = { showBudgetDropdown = it }
+                ) {
+                    OutlinedTextField(
+                        value = selectedBudget?.name ?: "None",
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Budget (optional)") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showBudgetDropdown) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = showBudgetDropdown,
+                        onDismissRequest = { showBudgetDropdown = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("None") },
+                            onClick = {
+                                selectedBudget = null
+                                showBudgetDropdown = false
+                            },
+                            leadingIcon = if (selectedBudget == null) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
+                        )
+                        budgets.sortedBy { it.name.lowercase() }.forEach { budget ->
+                            DropdownMenuItem(
+                                text = { Text(budget.name) },
+                                onClick = {
+                                    selectedBudget = budget
+                                    showBudgetDropdown = false
+                                },
+                                leadingIcon = if (selectedBudget == budget) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
+                            )
+                        }
+                    }
                 }
             }
 
@@ -273,6 +310,7 @@ fun AddTransactionScreen(
                 onClick = {
                     val amountValue = amount.toDoubleOrNull() ?: return@Button
                     val account = selectedAccount ?: return@Button
+                    val budgetId = if (selectedType == TransactionType.EXPENSE) selectedBudget?.id else null
                     if (isEditing && existingTransaction != null) {
                         transactionViewModel.updateTransaction(
                             transaction = existingTransaction,
@@ -282,7 +320,8 @@ fun AddTransactionScreen(
                             category = category.ifBlank { "Other" },
                             note = note,
                             date = date,
-                            toAccountId = if (selectedType == TransactionType.TRANSFER) selectedToAccount?.id else null
+                            toAccountId = if (selectedType == TransactionType.TRANSFER) selectedToAccount?.id else null,
+                            budgetId = budgetId
                         )
                     } else {
                         transactionViewModel.addTransaction(
@@ -292,7 +331,8 @@ fun AddTransactionScreen(
                             category = category.ifBlank { "Other" },
                             note = note,
                             date = date,
-                            toAccountId = if (selectedType == TransactionType.TRANSFER) selectedToAccount?.id else null
+                            toAccountId = if (selectedType == TransactionType.TRANSFER) selectedToAccount?.id else null,
+                            budgetId = budgetId
                         )
                     }
                     onNavigateBack()
