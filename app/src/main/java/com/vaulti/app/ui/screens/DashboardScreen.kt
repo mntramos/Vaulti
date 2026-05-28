@@ -22,10 +22,10 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import com.vaulti.app.data.database.entity.Account
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.ui.components.AccountCard
+import com.vaulti.app.ui.FormatUtils
 import com.vaulti.app.ui.components.TransactionItem
 import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.viewmodel.DashboardViewModel
-import java.util.Locale
 
 private enum class DashboardAccountSort {
     NAME_ASC, NAME_DESC, BALANCE_ASC, BALANCE_DESC
@@ -73,7 +73,7 @@ fun DashboardScreen(
         allTransactions.take(maxRecent)
     }
 
-    fun formatAmount(amount: Double): String = if (balancesHidden) "₱***.**" else "₱${String.format(Locale.getDefault(),"%,.2f", amount)}"
+    fun formatAmount(amount: Double): String = if (balancesHidden) "₱***.**" else "₱${FormatUtils.formatAmount(amount)}"
 
     Scaffold(
         floatingActionButton = {

@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.data.database.entity.TransactionType
+import com.vaulti.app.ui.FormatUtils
 import com.vaulti.app.ui.components.TransactionItem
 import com.vaulti.app.viewmodel.AccountViewModel
 import com.vaulti.app.viewmodel.TransactionViewModel
@@ -153,7 +154,7 @@ fun AccountDetailScreen(
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = if (hideBalance) "₱***.**" else "₱${String.format(Locale.getDefault(), "%,.2f", account.balance)}",
+                                text = if (hideBalance) "₱***.**" else "₱${FormatUtils.formatAmount(account.balance)}",
                                 style = MaterialTheme.typography.headlineLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White

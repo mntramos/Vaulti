@@ -18,9 +18,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vaulti.app.data.database.entity.Budget
 import com.vaulti.app.data.database.entity.BudgetPeriod
+import com.vaulti.app.ui.FormatUtils
 import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.viewmodel.BudgetViewModel
-import java.util.Locale
 
 private enum class BudgetSort {
     NAME_ASC, NAME_DESC, AMOUNT_ASC, AMOUNT_DESC, SPENT_ASC, SPENT_DESC
@@ -261,8 +261,7 @@ private fun BudgetCard(budget: Budget, onDelete: (Budget) -> Unit = {}, onEdit: 
                 progress = progress,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(8.dp)
-                    .then(Modifier),
+                    .height(8.dp),
                 color = if (isOverBudget) MaterialTheme.colorScheme.error else Color(budget.color),
                 trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
@@ -274,13 +273,13 @@ private fun BudgetCard(budget: Budget, onDelete: (Budget) -> Unit = {}, onEdit: 
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "₱${String.format(Locale.getDefault(),"%,.2f", budget.spent)} spent",
+                    text = "₱${FormatUtils.formatAmount(budget.spent)} spent",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = if (isOverBudget) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "₱${String.format(Locale.getDefault(),"%,.2f", budget.amount)}",
+                    text = "₱${FormatUtils.formatAmount(budget.amount)}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -289,7 +288,7 @@ private fun BudgetCard(budget: Budget, onDelete: (Budget) -> Unit = {}, onEdit: 
             if (isOverBudget) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "₱${String.format(Locale.getDefault(),"%,.2f", overspent)} over budget",
+                    text = "₱${FormatUtils.formatAmount(overspent)} over budget",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
                     fontWeight = FontWeight.SemiBold
@@ -307,7 +306,7 @@ private fun AddBudgetDialog(
     onConfirm: (String, Double, BudgetPeriod, Long) -> Unit
 ) {
     var name by remember { mutableStateOf(initial?.name ?: "") }
-    var amount by remember { mutableStateOf(if (initial != null) formatAmountForEdit(initial.amount) else "") }
+    var amount by remember { mutableStateOf(if (initial != null) FormatUtils.formatAmountForEdit(initial.amount) else "") }
     var selectedPeriod by remember { mutableStateOf(initial?.period ?: BudgetPeriod.MONTHLY) }
     var showPeriodDropdown by remember { mutableStateOf(false) }
     val isEditing = initial != null
@@ -380,12 +379,4 @@ private fun AddBudgetDialog(
             }
         }
     )
-}
-
-private fun formatAmountForEdit(amount: Double): String {
-    return if (amount == amount.toLong().toDouble()) {
-        String.format(Locale.getDefault(), "%.1f", amount)
-    } else {
-        String.format(Locale.getDefault(), "%.2f", amount)
-    }
 }

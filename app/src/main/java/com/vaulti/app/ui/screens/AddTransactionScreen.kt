@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.vaulti.app.data.database.entity.Budget
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.data.database.entity.TransactionType
+import com.vaulti.app.ui.FormatUtils
 import com.vaulti.app.ui.categories
 import com.vaulti.app.viewmodel.AccountViewModel
 import com.vaulti.app.viewmodel.TransactionViewModel
@@ -77,7 +78,7 @@ fun AddTransactionScreen(
     var showBudgetDropdown by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
 
-    val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+    val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
     val filteredAccounts = if (selectedAccount != null)
         accounts.filter { it.id != selectedAccount!!.id } else accounts
 
@@ -147,7 +148,7 @@ fun AddTransactionScreen(
                 ) {
                     accounts.sortedBy { it.name.lowercase() }.forEach { account ->
                         DropdownMenuItem(
-                            text = { Text("${account.name} (₱${String.format(Locale.getDefault(),"%,.2f", account.balance)})") },
+                            text = { Text("${account.name} (₱${FormatUtils.formatAmount(account.balance)})") },
                             onClick = {
                                 selectedAccount = account
                                 showAccountDropdown = false
@@ -178,7 +179,7 @@ fun AddTransactionScreen(
                     ) {
                         filteredAccounts.sortedBy { it.name.lowercase() }.forEach { account ->
                             DropdownMenuItem(
-                                text = { Text("${account.name} (₱${String.format(Locale.getDefault(),"%,.2f", account.balance)})") },
+                                text = { Text("${account.name} (₱${FormatUtils.formatAmount(account.balance)})") },
                                 onClick = {
                                     selectedToAccount = account
                                     showToAccountDropdown = false

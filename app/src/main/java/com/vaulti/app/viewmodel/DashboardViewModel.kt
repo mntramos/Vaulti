@@ -14,7 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    accountRepository: AccountRepository,
+    private val accountRepository: AccountRepository,
     private val transactionRepository: TransactionRepository
 ) : ViewModel() {
 

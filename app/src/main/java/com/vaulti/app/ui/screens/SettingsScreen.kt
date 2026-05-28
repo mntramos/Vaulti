@@ -1,6 +1,5 @@
 package com.vaulti.app.ui.screens
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -29,19 +28,10 @@ import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.ui.theme.ThemeMode
 import com.vaulti.app.viewmodel.SettingsViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.json.JSONArray
-import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.*
 import androidx.core.net.toUri
-import com.vaulti.app.data.database.entity.AccountType
-import com.vaulti.app.data.database.entity.BudgetPeriod
-import com.vaulti.app.data.database.entity.RecurringInterval
-import com.vaulti.app.data.database.entity.TransactionType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,7 +62,7 @@ fun SettingsScreen(
         if (uri != null) {
             scope.launch {
                 try {
-                    exportData(context, uri, viewModel)
+                    viewModel.exportData(uri)
                     snackbarHostState.showSnackbar("Data exported successfully", actionLabel = "Dismiss", duration = SnackbarDuration.Short)
                 } catch (e: Exception) {
                     snackbarHostState.showSnackbar("Export failed: ${e.message}", actionLabel = "Dismiss", duration = SnackbarDuration.Short)
@@ -87,7 +77,7 @@ fun SettingsScreen(
         if (uri != null) {
             scope.launch {
                 try {
-                    importData(context, uri, viewModel)
+                    viewModel.importData(uri)
                     snackbarHostState.showSnackbar("Data imported successfully", actionLabel = "Dismiss", duration = SnackbarDuration.Short)
                 } catch (e: Exception) {
                     snackbarHostState.showSnackbar("Import failed: ${e.message}", actionLabel = "Dismiss", duration = SnackbarDuration.Short)
@@ -382,9 +372,7 @@ fun SettingsScreen(
                     onClick = {
                         showDeleteDialog = false
                         scope.launch {
-                            withContext(Dispatchers.IO) {
-                                viewModel.database.clearAllTables()
-                            }
+                            viewModel.deleteAllData()
                             snackbarHostState.showSnackbar("All data deleted", actionLabel = "Dismiss", duration = SnackbarDuration.Short)
                         }
                     },
@@ -399,176 +387,5 @@ fun SettingsScreen(
                 }
             }
         )
-    }
-}
-
-private suspend fun exportData(context: Context, uri: Uri, viewModel: SettingsViewModel) {
-    val accounts = viewModel.accountRepository.getAll().first()
-    val transactions = viewModel.transactionRepository.getAll().first()
-    val budgets = viewModel.budgetRepository.getAll().first()
-    val goals = viewModel.goalRepository.getAll().first()
-
-    val root = JSONObject()
-    root.put("version", 1)
-    root.put("exportedAt", System.currentTimeMillis())
-
-    val accountsArr = JSONArray()
-    accounts.forEach { a ->
-        accountsArr.put(JSONObject().apply {
-            put("id", a.id)
-            put("name", a.name)
-            put("type", a.type.name)
-            put("balance", a.balance)
-            put("currency", a.currency)
-            put("color", a.color)
-            put("isArchived", a.isArchived)
-            put("createdAt", a.createdAt)
-        })
-    }
-    root.put("accounts", accountsArr)
-
-    val transactionsArr = JSONArray()
-    transactions.forEach { t ->
-        transactionsArr.put(JSONObject().apply {
-            put("id", t.id)
-            put("accountId", t.accountId)
-            put("toAccountId", t.toAccountId ?: JSONObject.NULL)
-            put("amount", t.amount)
-            put("type", t.type.name)
-            put("category", t.category)
-            put("note", t.note)
-            put("date", t.date)
-            put("isRecurring", t.isRecurring)
-            put("recurringInterval", t.recurringInterval?.name ?: JSONObject.NULL)
-            put("imagePath", t.imagePath ?: JSONObject.NULL)
-            put("budgetId", t.budgetId ?: JSONObject.NULL)
-            put("createdAt", t.createdAt)
-        })
-    }
-    root.put("transactions", transactionsArr)
-
-    val budgetsArr = JSONArray()
-    budgets.forEach { b ->
-        budgetsArr.put(JSONObject().apply {
-            put("id", b.id)
-            put("name", b.name)
-            put("amount", b.amount)
-            put("spent", b.spent)
-            put("period", b.period.name)
-            put("color", b.color)
-            put("startDate", b.startDate)
-            put("isActive", b.isActive)
-        })
-    }
-    root.put("budgets", budgetsArr)
-
-    val goalsArr = JSONArray()
-    goals.forEach { g ->
-        goalsArr.put(JSONObject().apply {
-            put("id", g.id)
-            put("name", g.name)
-            put("targetAmount", g.targetAmount)
-            put("currentAmount", g.currentAmount)
-            put("targetDate", g.targetDate ?: JSONObject.NULL)
-            put("color", g.color)
-            put("isCompleted", g.isCompleted)
-            put("createdAt", g.createdAt)
-        })
-    }
-    root.put("goals", goalsArr)
-
-    withContext(Dispatchers.IO) {
-        context.contentResolver.openOutputStream(uri)?.use { outputStream ->
-            outputStream.write(root.toString(2).toByteArray())
-        }
-    }
-}
-
-private suspend fun importData(context: Context, uri: Uri, viewModel: SettingsViewModel) {
-    val contentResolver = context.contentResolver
-    val jsonString = withContext(Dispatchers.IO) {
-        contentResolver.openInputStream(uri)?.use { inputStream ->
-            inputStream.bufferedReader().readText()
-        } ?: throw Exception("Could not read file")
-    }
-
-    val root = JSONObject(jsonString)
-
-    withContext(Dispatchers.IO) {
-        viewModel.database.clearAllTables()
-
-        val accountsArr = root.getJSONArray("accounts")
-        for (i in 0 until accountsArr.length()) {
-            val obj = accountsArr.getJSONObject(i)
-            val account = com.vaulti.app.data.database.entity.Account(
-                id = obj.getLong("id"),
-                name = obj.getString("name"),
-                type = AccountType.valueOf(obj.getString("type")),
-                balance = obj.getDouble("balance"),
-                currency = obj.optString("currency", "PHP"),
-                color = obj.getLong("color"),
-                isArchived = obj.optBoolean("isArchived", false),
-                createdAt = obj.getLong("createdAt")
-            )
-            viewModel.accountRepository.insert(account)
-        }
-
-        val transactionsArr = root.getJSONArray("transactions")
-        for (i in 0 until transactionsArr.length()) {
-            val obj = transactionsArr.getJSONObject(i)
-            val toAccountId = if (obj.isNull("toAccountId")) null else obj.getLong("toAccountId")
-            val recurringInterval = if (obj.isNull("recurringInterval")) null else RecurringInterval.valueOf(obj.getString("recurringInterval"))
-            val imagePath = if (obj.isNull("imagePath")) null else obj.getString("imagePath")
-            val budgetId = if (obj.isNull("budgetId")) null else obj.getLong("budgetId")
-            val transaction = com.vaulti.app.data.database.entity.Transaction(
-                id = obj.getLong("id"),
-                accountId = obj.getLong("accountId"),
-                toAccountId = toAccountId,
-                amount = obj.getDouble("amount"),
-                type = TransactionType.valueOf(obj.getString("type")),
-                category = obj.getString("category"),
-                note = obj.optString("note", ""),
-                date = obj.getLong("date"),
-                isRecurring = obj.optBoolean("isRecurring", false),
-                recurringInterval = recurringInterval,
-                imagePath = imagePath,
-                budgetId = budgetId,
-                createdAt = obj.getLong("createdAt")
-            )
-            viewModel.transactionRepository.insert(transaction)
-        }
-
-        val budgetsArr = root.getJSONArray("budgets")
-        for (i in 0 until budgetsArr.length()) {
-            val obj = budgetsArr.getJSONObject(i)
-            val budget = com.vaulti.app.data.database.entity.Budget(
-                id = obj.getLong("id"),
-                name = obj.getString("name"),
-                amount = obj.getDouble("amount"),
-                spent = obj.optDouble("spent", 0.0),
-                period = BudgetPeriod.valueOf(obj.getString("period")),
-                color = obj.getLong("color"),
-                startDate = obj.getLong("startDate"),
-                isActive = obj.optBoolean("isActive", true)
-            )
-            viewModel.budgetRepository.insert(budget)
-        }
-
-        val goalsArr = root.getJSONArray("goals")
-        for (i in 0 until goalsArr.length()) {
-            val obj = goalsArr.getJSONObject(i)
-            val targetDate = if (obj.isNull("targetDate")) null else obj.getLong("targetDate")
-            val goal = com.vaulti.app.data.database.entity.Goal(
-                id = obj.getLong("id"),
-                name = obj.getString("name"),
-                targetAmount = obj.getDouble("targetAmount"),
-                currentAmount = obj.optDouble("currentAmount", 0.0),
-                targetDate = targetDate,
-                color = obj.getLong("color"),
-                isCompleted = obj.optBoolean("isCompleted", false),
-                createdAt = obj.getLong("createdAt")
-            )
-            viewModel.goalRepository.insert(goal)
-        }
     }
 }

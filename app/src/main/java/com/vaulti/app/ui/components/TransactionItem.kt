@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
@@ -14,6 +15,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.data.database.entity.TransactionType
+import com.vaulti.app.ui.FormatUtils
 import com.vaulti.app.ui.theme.ExpenseRed
 import com.vaulti.app.ui.theme.IncomeGreen
 import com.vaulti.app.ui.theme.TransferBlue
@@ -30,7 +32,7 @@ fun TransactionItem(
     onEditClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {}
 ) {
-    val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+    val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
     val amountColor = when (transaction.type) {
         TransactionType.EXPENSE -> ExpenseRed
         TransactionType.INCOME -> IncomeGreen
@@ -124,7 +126,7 @@ fun TransactionItem(
                     }
                 }
                 Text(
-                    text = "$prefix₱${String.format(Locale.getDefault(), "%,.2f", transaction.amount)}",
+                    text = "$prefix₱${FormatUtils.formatAmount(transaction.amount)}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = amountColor,

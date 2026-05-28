@@ -20,6 +20,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import com.vaulti.app.data.database.entity.Goal
+import com.vaulti.app.ui.FormatUtils
 import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.viewmodel.GoalViewModel
 import java.text.SimpleDateFormat
@@ -291,7 +292,7 @@ private fun GoalCard(
     onComplete: () -> Unit = {}
 ) {
     val progress = if (goal.targetAmount > 0) (goal.currentAmount / goal.targetAmount).toFloat().coerceIn(0f, 1f) else 0f
-    val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+    val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
     val hasReachedTarget = goal.currentAmount >= goal.targetAmount
 
     Card(
@@ -341,8 +342,7 @@ private fun GoalCard(
                 progress = progress,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(10.dp)
-                    .then(Modifier),
+                    .height(10.dp),
                 color = Color(goal.color),
                 trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
@@ -354,13 +354,13 @@ private fun GoalCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "₱${String.format(Locale.getDefault(),"%,.2f", goal.currentAmount)}",
+                    text = "₱${FormatUtils.formatAmount(goal.currentAmount)}",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color(goal.color)
                 )
                 Text(
-                    text = "₱${String.format(Locale.getDefault(),"%,.2f", goal.targetAmount)}",
+                    text = "₱${FormatUtils.formatAmount(goal.targetAmount)}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -418,7 +418,7 @@ private fun AddGoalDialog(
     onConfirm: (String, Double, Long?, Long) -> Unit
 ) {
     var name by remember { mutableStateOf(initial?.name ?: "") }
-    var targetAmount by remember { mutableStateOf(if (initial != null) formatAmountForEdit(initial.targetAmount) else "") }
+    var targetAmount by remember { mutableStateOf(if (initial != null) FormatUtils.formatAmountForEdit(initial.targetAmount) else "") }
     var hasTargetDate by remember { mutableStateOf(initial?.targetDate != null) }
     var targetDate by remember { mutableLongStateOf(initial?.targetDate ?: System.currentTimeMillis()) }
     var showDatePicker by remember { mutableStateOf(false) }
@@ -513,13 +513,5 @@ private fun AddGoalDialog(
         ) {
             DatePicker(state = datePickerState)
         }
-    }
-}
-
-private fun formatAmountForEdit(amount: Double): String {
-    return if (amount == amount.toLong().toDouble()) {
-        String.format(Locale.getDefault(), "%.1f", amount)
-    } else {
-        String.format(Locale.getDefault(), "%.2f", amount)
     }
 }

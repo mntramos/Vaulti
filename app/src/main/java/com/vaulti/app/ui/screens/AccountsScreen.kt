@@ -20,9 +20,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.vaulti.app.data.database.entity.Account
 import com.vaulti.app.data.database.entity.AccountType
+import com.vaulti.app.ui.FormatUtils
 import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.viewmodel.AccountViewModel
-import java.util.Locale
 
 private enum class AccountSort {
     NAME_ASC, NAME_DESC, BALANCE_ASC, BALANCE_DESC
@@ -144,9 +144,7 @@ fun AccountsScreen(
                                 }
                             }
                             Text(
-                                text = if (hideBalance) "₱***.**" else "₱${String.format(
-                                    Locale.getDefault(),
-                                    "%,.2f", totalBalance)}",
+                                text = if (hideBalance) "₱***.**" else "₱${FormatUtils.formatAmount(totalBalance)}",
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -255,7 +253,7 @@ private fun AccountDetailCard(
                 }
             }
             Text(
-                text = if (hideBalance) "₱***.**" else "₱${String.format(Locale.getDefault(),"%,.2f", account.balance)}",
+                text = if (hideBalance) "₱***.**" else "₱${FormatUtils.formatAmount(account.balance)}",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,

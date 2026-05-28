@@ -13,7 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.vaulti.app.data.database.entity.Account
-import java.util.Locale
+import com.vaulti.app.ui.FormatUtils
 
 @Composable
 fun AccountCard(
@@ -45,7 +45,7 @@ fun AccountCard(
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = if (hideBalance) "₱***.**" else "₱${String.format(Locale.getDefault(), "%,.2f", account.balance)}",
+                text = if (hideBalance) "₱***.**" else "₱${FormatUtils.formatAmount(account.balance)}",
                 style = MaterialTheme.typography.headlineMedium,
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
