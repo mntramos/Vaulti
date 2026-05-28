@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vaulti.app.data.database.entity.Account
 import com.vaulti.app.data.database.entity.Budget
+import com.vaulti.app.data.database.entity.BudgetPeriod
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.data.database.entity.TransactionType
 import com.vaulti.app.data.repository.AccountRepository
@@ -12,6 +13,7 @@ import com.vaulti.app.data.repository.TransactionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,8 +35,38 @@ class TransactionViewModel @Inject constructor(
     private suspend fun updateBudgetSpent(budgetId: Long?, amountDelta: Double) {
         if (budgetId == null) return
         val budget = budgetRepository.getById(budgetId) ?: return
-        val newSpent = (budget.spent + amountDelta).coerceAtLeast(0.0)
-        budgetRepository.updateSpent(budget.id, newSpent)
+        val now = System.currentTimeMillis()
+        val periodStart = getCurrentPeriodStart(budget.startDate, budget.period, now)
+        val newSpent = if (periodStart > budget.startDate) {
+            amountDelta.coerceAtLeast(0.0)
+        } else {
+            (budget.spent + amountDelta).coerceAtLeast(0.0)
+        }
+        if (periodStart > budget.startDate) {
+            budgetRepository.update(budget.copy(startDate = periodStart, spent = newSpent))
+        } else {
+            budgetRepository.updateSpent(budget.id, newSpent)
+        }
+    }
+
+    private fun getCurrentPeriodStart(startDate: Long, period: BudgetPeriod, now: Long): Long {
+        val cal = Calendar.getInstance().apply { timeInMillis = startDate }
+        val nowCal = Calendar.getInstance().apply { timeInMillis = now }
+        return when (period) {
+            BudgetPeriod.WEEKLY -> {
+                val daysSinceStart = ((now - startDate) / (7 * 24 * 60 * 60 * 1000)).toInt()
+                cal.apply { add(Calendar.DAY_OF_YEAR, daysSinceStart * 7) }.timeInMillis
+            }
+            BudgetPeriod.MONTHLY -> {
+                val monthsDiff = (nowCal.get(Calendar.YEAR) - cal.get(Calendar.YEAR)) * 12 +
+                        nowCal.get(Calendar.MONTH) - cal.get(Calendar.MONTH)
+                cal.apply { add(Calendar.MONTH, monthsDiff) }.timeInMillis
+            }
+            BudgetPeriod.YEARLY -> {
+                val yearsDiff = nowCal.get(Calendar.YEAR) - cal.get(Calendar.YEAR)
+                cal.apply { add(Calendar.YEAR, yearsDiff) }.timeInMillis
+            }
+        }
     }
 
     fun addTransaction(
