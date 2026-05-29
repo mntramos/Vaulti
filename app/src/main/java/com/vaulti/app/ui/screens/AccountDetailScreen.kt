@@ -65,7 +65,7 @@ fun AccountDetailScreen(
         accountTransactions.filter { tx ->
             (filterType == null || tx.type == filterType) &&
             (startDate == null || tx.date >= startDate) &&
-            (endDate == null || tx.date <= endDate + 86400000L)
+            (endDate == null || tx.date <= endDate)
         }
     }
 
@@ -265,7 +265,13 @@ fun AccountDetailScreen(
             onDismissRequest = { showStartDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
-                    filterStartDate = datePickerState.selectedDateMillis ?: filterStartDate
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val utcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = millis }
+                        filterStartDate = Calendar.getInstance().apply {
+                            set(utcCal.get(Calendar.YEAR), utcCal.get(Calendar.MONTH), utcCal.get(Calendar.DAY_OF_MONTH), 0, 0, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }.timeInMillis
+                    }
                     showStartDatePicker = false
                 }) {
                     Text("OK")
@@ -287,7 +293,13 @@ fun AccountDetailScreen(
             onDismissRequest = { showEndDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
-                    filterEndDate = datePickerState.selectedDateMillis ?: filterEndDate
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val utcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = millis }
+                        filterEndDate = Calendar.getInstance().apply {
+                            set(utcCal.get(Calendar.YEAR), utcCal.get(Calendar.MONTH), utcCal.get(Calendar.DAY_OF_MONTH), 23, 59, 59)
+                            set(Calendar.MILLISECOND, 999)
+                        }.timeInMillis
+                    }
                     showEndDatePicker = false
                 }) {
                     Text("OK")

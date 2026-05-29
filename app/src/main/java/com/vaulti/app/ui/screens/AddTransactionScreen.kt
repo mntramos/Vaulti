@@ -289,7 +289,13 @@ fun AddTransactionScreen(
                     onDismissRequest = { showDatePicker = false },
                     confirmButton = {
                         TextButton(onClick = {
-                            datePickerState.selectedDateMillis?.let { date = it }
+                            datePickerState.selectedDateMillis?.let { millis ->
+                                val utcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = millis }
+                                date = Calendar.getInstance().apply {
+                                    set(utcCal.get(Calendar.YEAR), utcCal.get(Calendar.MONTH), utcCal.get(Calendar.DAY_OF_MONTH), 23, 59, 59)
+                                    set(Calendar.MILLISECOND, 999)
+                                }.timeInMillis
+                            }
                             showDatePicker = false
                         }) {
                             Text("OK")
