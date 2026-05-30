@@ -144,7 +144,7 @@ fun AccountsScreen(
                                 }
                             }
                             Text(
-                                text = if (hideBalance) "₱***.**" else "₱${FormatUtils.formatAmount(totalBalance)}",
+                                text = if (hideBalance) "₱*****" else "₱${FormatUtils.formatAmount(totalBalance)}",
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -253,7 +253,7 @@ private fun AccountDetailCard(
                 }
             }
             Text(
-                text = if (hideBalance) "₱***.**" else "₱${FormatUtils.formatAmount(account.balance)}",
+                text = if (hideBalance) "₱*****" else "₱${FormatUtils.formatAmount(account.balance)}",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,

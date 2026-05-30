@@ -76,7 +76,7 @@ fun DashboardScreen(
         allTransactions.take(maxRecent)
     }
 
-    fun formatAmount(amount: Double): String = if (balancesHidden) "₱***.**" else "₱${FormatUtils.formatAmount(amount)}"
+    fun formatAmount(amount: Double): String = if (balancesHidden) "₱*****" else "₱${FormatUtils.formatAmount(amount)}"
 
     Scaffold(
         floatingActionButton = {

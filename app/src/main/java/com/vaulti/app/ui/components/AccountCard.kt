@@ -45,7 +45,7 @@ fun AccountCard(
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = if (hideBalance) "₱***.**" else "₱${FormatUtils.formatAmount(account.balance)}",
+                text = if (hideBalance) "₱*****" else "₱${FormatUtils.formatAmount(account.balance)}",
                 style = MaterialTheme.typography.headlineMedium,
                 color = Color.White,
                 fontWeight = FontWeight.Bold,

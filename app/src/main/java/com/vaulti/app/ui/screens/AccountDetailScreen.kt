@@ -154,7 +154,7 @@ fun AccountDetailScreen(
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = if (hideBalance) "₱***.**" else "₱${FormatUtils.formatAmount(account.balance)}",
+                                text = if (hideBalance) "₱*****" else "₱${FormatUtils.formatAmount(account.balance)}",
                                 style = MaterialTheme.typography.headlineLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
