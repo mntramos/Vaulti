@@ -28,7 +28,7 @@ import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.viewmodel.DashboardViewModel
 
 private enum class DashboardAccountSort {
-    NAME_ASC, NAME_DESC, BALANCE_ASC, BALANCE_DESC
+    NAME_ASC, NAME_DESC, BALANCE_ASC, BALANCE_DESC, LAST_UPDATED_DESC, LAST_UPDATED_ASC
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,14 +55,17 @@ fun DashboardScreen(
 
     val accountMap = remember(accounts) { accounts.associateBy { it.id } }
     var showAccountSortMenu by remember { mutableStateOf(false) }
-    var accountSortOrder by remember { mutableStateOf(FormatUtils.safeValueOf(appPreferences.dashboardAccountSort, DashboardAccountSort.NAME_ASC)) }
+    var accountSortOrder by remember { mutableStateOf(FormatUtils.safeValueOf(appPreferences.dashboardAccountSort, DashboardAccountSort.LAST_UPDATED_DESC)) }
+    val lastTransactionDateByAccount by viewModel.lastTransactionDateByAccount.collectAsState()
 
-    val sortedAccounts = remember(accounts, accountSortOrder) {
+    val sortedAccounts = remember(accounts, accountSortOrder, lastTransactionDateByAccount) {
         when (accountSortOrder) {
             DashboardAccountSort.NAME_ASC -> accounts.sortedBy { it.name.lowercase() }
             DashboardAccountSort.NAME_DESC -> accounts.sortedByDescending { it.name.lowercase() }
             DashboardAccountSort.BALANCE_ASC -> accounts.sortedBy { it.balance }
             DashboardAccountSort.BALANCE_DESC -> accounts.sortedByDescending { it.balance }
+            DashboardAccountSort.LAST_UPDATED_DESC -> accounts.sortedByDescending { lastTransactionDateByAccount[it.id] ?: 0L }
+            DashboardAccountSort.LAST_UPDATED_ASC -> accounts.sortedBy { lastTransactionDateByAccount[it.id] ?: 0L }
         }
     }
 
@@ -230,6 +233,16 @@ fun DashboardScreen(
                                         text = { Text("Balance (Low-High)", fontWeight = if (accountSortOrder == DashboardAccountSort.BALANCE_ASC) FontWeight.Bold else FontWeight.Normal) },
                                         onClick = { accountSortOrder = DashboardAccountSort.BALANCE_ASC; showAccountSortMenu = false; appPreferences.dashboardAccountSort = DashboardAccountSort.BALANCE_ASC.name },
                                         leadingIcon = if (accountSortOrder == DashboardAccountSort.BALANCE_ASC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Last Updated (Newest)", fontWeight = if (accountSortOrder == DashboardAccountSort.LAST_UPDATED_DESC) FontWeight.Bold else FontWeight.Normal) },
+                                        onClick = { accountSortOrder = DashboardAccountSort.LAST_UPDATED_DESC; showAccountSortMenu = false; appPreferences.dashboardAccountSort = DashboardAccountSort.LAST_UPDATED_DESC.name },
+                                        leadingIcon = if (accountSortOrder == DashboardAccountSort.LAST_UPDATED_DESC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Last Updated (Oldest)", fontWeight = if (accountSortOrder == DashboardAccountSort.LAST_UPDATED_ASC) FontWeight.Bold else FontWeight.Normal) },
+                                        onClick = { accountSortOrder = DashboardAccountSort.LAST_UPDATED_ASC; showAccountSortMenu = false; appPreferences.dashboardAccountSort = DashboardAccountSort.LAST_UPDATED_ASC.name },
+                                        leadingIcon = if (accountSortOrder == DashboardAccountSort.LAST_UPDATED_ASC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
                                     )
                             }
                         }

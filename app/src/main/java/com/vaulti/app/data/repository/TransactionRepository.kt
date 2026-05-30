@@ -1,5 +1,6 @@
 package com.vaulti.app.data.repository
 
+import com.vaulti.app.data.database.dao.AccountLastTransactionRaw
 import com.vaulti.app.data.database.dao.TransactionDao
 import com.vaulti.app.data.database.entity.Transaction
 import kotlinx.coroutines.flow.Flow
@@ -13,6 +14,7 @@ class TransactionRepository(private val transactionDao: TransactionDao) {
     fun getRecentTransactions(limit: Int = 10): Flow<List<Transaction>> = transactionDao.getRecentTransactions(limit)
     fun getTotalExpense(start: Long, end: Long): Flow<Double?> = transactionDao.getTotalExpense(start, end)
     fun getTotalIncome(start: Long, end: Long): Flow<Double?> = transactionDao.getTotalIncome(start, end)
+    fun getLastTransactionDateByAccount(): Flow<List<AccountLastTransactionRaw>> = transactionDao.getLastTransactionDateByAccount()
     suspend fun getById(id: Long): Transaction? = transactionDao.getById(id)
     suspend fun insert(transaction: Transaction): Long = transactionDao.insert(transaction)
     suspend fun update(transaction: Transaction) = transactionDao.update(transaction)

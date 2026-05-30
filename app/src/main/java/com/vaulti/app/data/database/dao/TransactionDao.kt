@@ -4,6 +4,8 @@ import androidx.room.*
 import com.vaulti.app.data.database.entity.Transaction
 import kotlinx.coroutines.flow.Flow
 
+data class AccountLastTransactionRaw(val cId: Long, val lastDate: Long)
+
 @Dao
 interface TransactionDao {
     @Query("SELECT * FROM transactions ORDER BY date DESC")
@@ -33,6 +35,9 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions ORDER BY date DESC LIMIT :limit")
     fun getRecentTransactions(limit: Int = 10): Flow<List<Transaction>>
 
+    @Query("SELECT accountId AS cId, MAX(date) AS lastDate FROM transactions GROUP BY accountId UNION SELECT toAccountId AS cId, MAX(date) AS lastDate FROM transactions WHERE toAccountId IS NOT NULL GROUP BY toAccountId")
+    fun getLastTransactionDateByAccount(): Flow<List<AccountLastTransactionRaw>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(transaction: Transaction): Long
 
@@ -41,5 +46,4 @@ interface TransactionDao {
 
     @Delete
     suspend fun delete(transaction: Transaction)
-
 }

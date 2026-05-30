@@ -2,6 +2,7 @@ package com.vaulti.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vaulti.app.data.database.dao.AccountLastTransactionRaw
 import com.vaulti.app.data.database.entity.Account
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.data.repository.AccountRepository
@@ -25,6 +26,10 @@ class DashboardViewModel @Inject constructor(
 
     val recentTransactions: StateFlow<List<Transaction>> = transactionRepository.getRecentTransactions(50)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val lastTransactionDateByAccount: StateFlow<Map<Long, Long>> = transactionRepository.getLastTransactionDateByAccount()
+        .map { list -> list.groupBy({ it.cId }, { it.lastDate }).mapValues { (_, dates) -> dates.max() } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     private val monthAgo = System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000
 
