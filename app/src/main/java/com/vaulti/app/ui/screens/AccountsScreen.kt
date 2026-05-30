@@ -27,7 +27,7 @@ import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.viewmodel.AccountViewModel
 
 private enum class AccountSort {
-    NAME_ASC, NAME_DESC, BALANCE_ASC, BALANCE_DESC
+    NAME_ASC, NAME_DESC, BALANCE_ASC, BALANCE_DESC, LAST_UPDATED_DESC, LAST_UPDATED_ASC
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,17 +41,20 @@ fun AccountsScreen(
 ) {
     val accounts by viewModel.accounts.collectAsState()
     val totalBalance by viewModel.totalBalance.collectAsState()
+    val lastTransactionDateByAccount by viewModel.lastTransactionDateByAccount.collectAsState()
 
     var showAddDialog by remember { mutableStateOf(false) }
     var showSortMenu by remember { mutableStateOf(false) }
-    var sortOrder by remember { mutableStateOf(FormatUtils.safeValueOf(appPreferences.accountsSort, AccountSort.NAME_ASC)) }
+    var sortOrder by remember { mutableStateOf(FormatUtils.safeValueOf(appPreferences.accountsSort, AccountSort.LAST_UPDATED_DESC)) }
 
-    val sortedAccounts = remember(accounts, sortOrder) {
+    val sortedAccounts = remember(accounts, sortOrder, lastTransactionDateByAccount) {
         when (sortOrder) {
             AccountSort.NAME_ASC -> accounts.sortedBy { it.name.lowercase() }
             AccountSort.NAME_DESC -> accounts.sortedByDescending { it.name.lowercase() }
             AccountSort.BALANCE_ASC -> accounts.sortedBy { it.balance }
             AccountSort.BALANCE_DESC -> accounts.sortedByDescending { it.balance }
+            AccountSort.LAST_UPDATED_DESC -> accounts.sortedByDescending { lastTransactionDateByAccount[it.id] ?: 0L }
+            AccountSort.LAST_UPDATED_ASC -> accounts.sortedBy { lastTransactionDateByAccount[it.id] ?: 0L }
         }
     }
 
@@ -107,6 +110,16 @@ fun AccountsScreen(
                                 text = { Text("Balance (Low-High)", fontWeight = if (sortOrder == AccountSort.BALANCE_ASC) FontWeight.Bold else FontWeight.Normal) },
                                 onClick = { sortOrder = AccountSort.BALANCE_ASC; showSortMenu = false; appPreferences.accountsSort = AccountSort.BALANCE_ASC.name },
                                 leadingIcon = if (sortOrder == AccountSort.BALANCE_ASC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Last Updated (Newest)", fontWeight = if (sortOrder == AccountSort.LAST_UPDATED_DESC) FontWeight.Bold else FontWeight.Normal) },
+                                onClick = { sortOrder = AccountSort.LAST_UPDATED_DESC; showSortMenu = false; appPreferences.accountsSort = AccountSort.LAST_UPDATED_DESC.name },
+                                leadingIcon = if (sortOrder == AccountSort.LAST_UPDATED_DESC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Last Updated (Oldest)", fontWeight = if (sortOrder == AccountSort.LAST_UPDATED_ASC) FontWeight.Bold else FontWeight.Normal) },
+                                onClick = { sortOrder = AccountSort.LAST_UPDATED_ASC; showSortMenu = false; appPreferences.accountsSort = AccountSort.LAST_UPDATED_ASC.name },
+                                leadingIcon = if (sortOrder == AccountSort.LAST_UPDATED_ASC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
                             )
                         }
                     }
