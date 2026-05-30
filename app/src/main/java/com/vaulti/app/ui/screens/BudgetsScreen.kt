@@ -3,6 +3,8 @@ package com.vaulti.app.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
@@ -328,6 +330,7 @@ private fun AddBudgetDialog(
                     onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) amount = it },
                     label = { Text("Budget Amount") },
                     prefix = { Text("₱") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth()
                 )
 

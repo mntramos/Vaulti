@@ -442,6 +442,7 @@ private fun AddGoalDialog(
                     onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) targetAmount = it },
                     label = { Text("Target Amount") },
                     prefix = { Text("₱") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth()
                 )
 

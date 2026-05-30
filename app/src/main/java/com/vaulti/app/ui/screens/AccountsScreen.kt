@@ -4,6 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
@@ -16,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.vaulti.app.data.database.entity.Account
@@ -286,6 +288,15 @@ private fun AddAccountDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                OutlinedTextField(
+                    value = balance,
+                    onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) balance = it },
+                    label = { Text("Initial Balance") },
+                    prefix = { Text("₱") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
                 ExposedDropdownMenuBox(
                     expanded = showTypeDropdown,
                     onExpandedChange = { showTypeDropdown = it }
@@ -315,14 +326,6 @@ private fun AddAccountDialog(
                         }
                     }
                 }
-
-                OutlinedTextField(
-                    value = balance,
-                    onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) balance = it },
-                    label = { Text("Initial Balance") },
-                    prefix = { Text("₱") },
-                    modifier = Modifier.fillMaxWidth()
-                )
             }
         },
         confirmButton = {
