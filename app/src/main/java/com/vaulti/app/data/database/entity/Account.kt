@@ -12,6 +12,7 @@ data class Account(
     val currency: String = "PHP",
     val color: Long = 0xFF6C63FF,
     val isArchived: Boolean = false,
+    val isLiability: Boolean = false,
     val createdAt: Long = System.currentTimeMillis()
 )
 

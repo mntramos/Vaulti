@@ -49,10 +49,10 @@ fun DashboardScreen(
 ) {
     val accounts by viewModel.accounts.collectAsState()
     val totalBalance by viewModel.totalBalance.collectAsState()
+    val totalAssets by viewModel.totalAssets.collectAsState()
+    val totalLiabilities by viewModel.totalLiabilities.collectAsState()
     val allTransactions by viewModel.recentTransactions.collectAsState()
-    val monthlyExpense by viewModel.monthlyExpense.collectAsState()
 
-    val monthlyIncome by viewModel.monthlyIncome.collectAsState()
 
     val accountMap = remember(accounts) { accounts.associateBy { it.id } }
     var showAccountSortMenu by remember { mutableStateOf(false) }
@@ -139,7 +139,7 @@ fun DashboardScreen(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Total Balance",
+                                text = "Net Worth",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                             )
@@ -170,26 +170,26 @@ fun DashboardScreen(
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
-                                    text = formatAmount(monthlyIncome),
+                                    text = formatAmount(totalAssets),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimary
                                 )
                                 Text(
-                                    text = "Income (30d)",
+                                    text = "Assets",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
                                 )
                             }
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
-                                    text = formatAmount(monthlyExpense),
+                                    text = formatAmount(totalLiabilities),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimary
                                 )
                                 Text(
-                                    text = "Expenses (30d)",
+                                    text = "Liabilities",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
                                 )

@@ -15,6 +15,12 @@ interface AccountDao {
     @Query("SELECT SUM(balance) FROM accounts WHERE isArchived = 0")
     fun getTotalBalance(): Flow<Double?>
 
+    @Query("SELECT SUM(balance) FROM accounts WHERE isArchived = 0 AND isLiability = 0")
+    fun getTotalAssets(): Flow<Double?>
+
+    @Query("SELECT SUM(balance) FROM accounts WHERE isArchived = 0 AND isLiability = 1")
+    fun getTotalLiabilities(): Flow<Double?>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(account: Account): Long
 

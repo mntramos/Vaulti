@@ -24,6 +24,14 @@ class DashboardViewModel @Inject constructor(
         .map { it ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
+    val totalAssets: StateFlow<Double> = accountRepository.getTotalAssets()
+        .map { it ?: 0.0 }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    val totalLiabilities: StateFlow<Double> = accountRepository.getTotalLiabilities()
+        .map { it ?: 0.0 }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
     val recentTransactions: StateFlow<List<Transaction>> = transactionRepository.getRecentTransactions(50)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
