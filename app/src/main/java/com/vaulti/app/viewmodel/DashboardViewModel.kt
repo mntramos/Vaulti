@@ -8,6 +8,7 @@ import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.data.repository.AccountRepository
 import com.vaulti.app.data.repository.TransactionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlin.math.abs
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
@@ -30,6 +31,10 @@ class DashboardViewModel @Inject constructor(
 
     val totalLiabilities: StateFlow<Double> = accountRepository.getTotalLiabilities()
         .map { it ?: 0.0 }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+    val totalLiabilitiesDisplay: StateFlow<Double> = totalLiabilities
+        .map { abs(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val recentTransactions: StateFlow<List<Transaction>> = transactionRepository.getRecentTransactions(50)
