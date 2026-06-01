@@ -255,7 +255,11 @@ fun DashboardScreen(
                 }
 
                 item {
+                    val accountsRowState = rememberLazyListState()
+                    LaunchedEffect(Unit) { accountsRowState.scrollToItem(0) }
+
                     LazyRow(
+                        state = accountsRowState,
                         modifier = Modifier.height(120.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
