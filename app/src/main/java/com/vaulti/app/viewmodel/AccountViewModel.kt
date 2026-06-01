@@ -29,13 +29,15 @@ class AccountViewModel @Inject constructor(
         .map { list -> list.groupBy({ it.cId }, { it.lastDate }).mapValues { (_, dates) -> dates.max() } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
-    fun addAccount(name: String, type: AccountType, balance: Double, color: Long = 0xFF6C63FF) {
+    fun addAccount(name: String, type: AccountType, balance: Double, color: Long = 0xFF6C63FF, isLiability: Boolean = type.isLiability) {
         viewModelScope.launch {
+            val storedBalance = if (isLiability) -balance else balance
             val account = Account(
                 name = name,
                 type = type,
-                balance = balance,
-                color = color
+                balance = storedBalance,
+                color = color,
+                isLiability = isLiability
             )
             accountRepository.insert(account)
         }

@@ -217,8 +217,8 @@ fun AccountsScreen(
     if (showAddDialog) {
         AddAccountDialog(
             onDismiss = { showAddDialog = false },
-            onConfirm = { name, type, balance, color ->
-                viewModel.addAccount(name, type, balance, color)
+            onConfirm = { name, type, balance, color, isLiability ->
+                viewModel.addAccount(name, type, balance, color, isLiability)
                 showAddDialog = false
             }
         )
@@ -287,12 +287,13 @@ private fun AccountDetailCard(
 @Composable
 private fun AddAccountDialog(
     onDismiss: () -> Unit,
-    onConfirm: (String, AccountType, Double, Long) -> Unit
+    onConfirm: (String, AccountType, Double, Long, Boolean) -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf(AccountType.CASH) }
     var balance by remember { mutableStateOf("") }
     var showTypeDropdown by remember { mutableStateOf(false) }
+    var isLiability by remember(selectedType) { mutableStateOf(selectedType.isLiability) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -309,7 +310,7 @@ private fun AddAccountDialog(
                 OutlinedTextField(
                     value = balance,
                     onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) balance = it },
-                    label = { Text("Initial Balance") },
+                    label = { Text(if (isLiability) "Outstanding Debt" else "Initial Balance") },
                     prefix = { Text("₱") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth()
@@ -338,10 +339,25 @@ private fun AddAccountDialog(
                                 text = { Text(type.displayName) },
                                 onClick = {
                                     selectedType = type
+                                    isLiability = type.isLiability
                                     showTypeDropdown = false
                                 }
                             )
                         }
+                    }
+                }
+
+                if (selectedType == AccountType.OTHER) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable { isLiability = !isLiability }
+                    ) {
+                        Checkbox(
+                            checked = isLiability,
+                            onCheckedChange = { isLiability = it }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("This is a liability / debt")
                     }
                 }
             }
@@ -350,7 +366,7 @@ private fun AddAccountDialog(
             TextButton(
                 onClick = {
                     val balanceValue = balance.toDoubleOrNull() ?: 0.0
-                    onConfirm(name, selectedType, balanceValue, selectedType.defaultColor)
+                    onConfirm(name, selectedType, balanceValue, selectedType.defaultColor, isLiability)
                 },
                 enabled = name.isNotBlank()
             ) {

@@ -8,6 +8,8 @@ class AccountRepository(private val accountDao: AccountDao) {
     fun getAllActive(): Flow<List<Account>> = accountDao.getAllActive()
     fun getAll(): Flow<List<Account>> = accountDao.getAll()
     fun getTotalBalance(): Flow<Double?> = accountDao.getTotalBalance()
+    fun getTotalAssets(): Flow<Double?> = accountDao.getTotalAssets()
+    fun getTotalLiabilities(): Flow<Double?> = accountDao.getTotalLiabilities()
     suspend fun insert(account: Account): Long = accountDao.insert(account)
     suspend fun update(account: Account) = accountDao.update(account)
     suspend fun delete(account: Account) = accountDao.delete(account)
