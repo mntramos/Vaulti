@@ -7,16 +7,18 @@ import androidx.lifecycle.viewModelScope
 import com.vaulti.app.data.database.VaultiDatabase
 import com.vaulti.app.data.database.entity.AccountType
 import com.vaulti.app.data.database.entity.BudgetPeriod
+import com.vaulti.app.data.database.entity.Category
 import com.vaulti.app.data.database.entity.RecurringInterval
 import com.vaulti.app.data.database.entity.TransactionType
 import com.vaulti.app.data.repository.AccountRepository
 import com.vaulti.app.data.repository.BudgetRepository
+import com.vaulti.app.data.repository.CategoryRepository
 import com.vaulti.app.data.repository.GoalRepository
 import com.vaulti.app.data.repository.TransactionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -30,8 +32,20 @@ class SettingsViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val budgetRepository: BudgetRepository,
     private val goalRepository: GoalRepository,
+    private val categoryRepository: CategoryRepository,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
+
+    val categories = categoryRepository.getAll()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun addCategory(name: String) {
+        viewModelScope.launch { categoryRepository.insert(name) }
+    }
+
+    fun deleteCategory(category: Category) {
+        viewModelScope.launch { categoryRepository.delete(category) }
+    }
 
     fun exportData(uri: Uri) {
         viewModelScope.launch {

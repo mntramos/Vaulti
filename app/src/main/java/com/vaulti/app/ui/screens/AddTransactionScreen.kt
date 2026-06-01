@@ -19,7 +19,6 @@ import com.vaulti.app.data.database.entity.Budget
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.data.database.entity.TransactionType
 import com.vaulti.app.ui.FormatUtils
-import com.vaulti.app.ui.categories
 import com.vaulti.app.viewmodel.AccountViewModel
 import com.vaulti.app.viewmodel.TransactionViewModel
 import java.text.SimpleDateFormat
@@ -36,6 +35,7 @@ fun AddTransactionScreen(
 ) {
     val accounts by accountViewModel.accounts.collectAsState()
     val budgets by transactionViewModel.budgets.collectAsState()
+    val categories by transactionViewModel.categories.collectAsState()
     val isEditing = existingTransaction != null
 
     var selectedType by remember(existingTransaction) {
@@ -208,9 +208,9 @@ fun AddTransactionScreen(
             ) {
                 categories.forEach { cat ->
                     FilterChip(
-                        selected = category == cat,
-                        onClick = { category = cat },
-                        label = { Text(cat, style = MaterialTheme.typography.bodySmall) }
+                        selected = category == cat.name,
+                        onClick = { category = cat.name },
+                        label = { Text(cat.name, style = MaterialTheme.typography.bodySmall) }
                     )
                 }
             }

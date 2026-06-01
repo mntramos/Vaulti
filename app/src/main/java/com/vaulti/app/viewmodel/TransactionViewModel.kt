@@ -5,10 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.vaulti.app.data.database.entity.Account
 import com.vaulti.app.data.database.entity.Budget
 import com.vaulti.app.data.database.entity.BudgetPeriod
+import com.vaulti.app.data.database.entity.Category
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.data.database.entity.TransactionType
 import com.vaulti.app.data.repository.AccountRepository
 import com.vaulti.app.data.repository.BudgetRepository
+import com.vaulti.app.data.repository.CategoryRepository
 import com.vaulti.app.data.repository.TransactionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -20,7 +22,8 @@ import javax.inject.Inject
 class TransactionViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val accountRepository: AccountRepository,
-    private val budgetRepository: BudgetRepository
+    private val budgetRepository: BudgetRepository,
+    private val categoryRepository: CategoryRepository
 ) : ViewModel() {
 
     val transactions: StateFlow<List<Transaction>> = transactionRepository.getAll()
@@ -31,6 +34,21 @@ class TransactionViewModel @Inject constructor(
 
     val budgets: StateFlow<List<Budget>> = budgetRepository.getAllActive()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val categories: StateFlow<List<Category>> = categoryRepository.getAll()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    init {
+        viewModelScope.launch {
+            val defaultCategories = listOf(
+                "Food & Drinks", "Transportation", "Shopping", "Bills & Utilities",
+                "Entertainment", "Health", "Education", "Salary", "Freelance", "Transfer", "Other"
+            )
+            if (categoryRepository.count() == 0) {
+                defaultCategories.forEach { categoryRepository.insert(it) }
+            }
+        }
+    }
 
     private suspend fun updateBudgetSpent(budgetId: Long?, amountDelta: Double) {
         if (budgetId == null) return
