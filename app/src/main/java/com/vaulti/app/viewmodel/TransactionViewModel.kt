@@ -50,6 +50,12 @@ class TransactionViewModel @Inject constructor(
         }
     }
 
+    fun addCategory(name: String) {
+        viewModelScope.launch {
+            categoryRepository.insert(name)
+        }
+    }
+
     private suspend fun updateBudgetSpent(budgetId: Long?, amountDelta: Double) {
         if (budgetId == null) return
         val budget = budgetRepository.getById(budgetId) ?: return
