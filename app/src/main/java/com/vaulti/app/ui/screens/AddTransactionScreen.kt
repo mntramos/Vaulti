@@ -77,6 +77,7 @@ fun AddTransactionScreen(
     var showToAccountDropdown by remember { mutableStateOf(false) }
     var showBudgetDropdown by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var showAddCategoryDialog by remember { mutableStateOf(false) }
 
     val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
     val filteredAccounts = if (selectedAccount != null)
@@ -214,6 +215,11 @@ fun AddTransactionScreen(
                         label = { Text(cat.name, style = MaterialTheme.typography.bodySmall) }
                     )
                 }
+                FilterChip(
+                    selected = false,
+                    onClick = { showAddCategoryDialog = true },
+                    label = { Text("+ Add Category", style = MaterialTheme.typography.bodySmall) }
+                )
             }
 
             if (selectedType == TransactionType.EXPENSE && budgets.isNotEmpty()) {
@@ -356,5 +362,41 @@ fun AddTransactionScreen(
                 )
             }
         }
+    }
+
+    if (showAddCategoryDialog) {
+        var newCategoryName by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showAddCategoryDialog = false },
+            title = { Text("Add Category") },
+            text = {
+                OutlinedTextField(
+                    value = newCategoryName,
+                    onValueChange = { newCategoryName = it },
+                    label = { Text("Category Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (newCategoryName.isNotBlank()) {
+                            transactionViewModel.addCategory(newCategoryName)
+                            category = newCategoryName
+                            showAddCategoryDialog = false
+                        }
+                    },
+                    enabled = newCategoryName.isNotBlank()
+                ) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddCategoryDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
