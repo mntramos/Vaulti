@@ -37,6 +37,7 @@ private enum class GoalFilter {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+@Suppress("UnusedMaterial3ScaffoldPaddingParameter")
 fun GoalsScreen(
     viewModel: GoalViewModel,
     appPreferences: AppPreferences
@@ -76,16 +77,16 @@ fun GoalsScreen(
                 Icon(Icons.Filled.Add, contentDescription = "Add Goal")
             }
         }
-    ) { padding ->
+    ) { _ ->
         val listState = rememberLazyListState()
         LaunchedEffect(Unit) { listState.scrollToItem(0) }
 
-        LazyColumn(
-            state = listState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(16.dp),
+            LazyColumn(
+                state = listState,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding(),
+                contentPadding = PaddingValues(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
@@ -203,7 +204,7 @@ fun GoalsScreen(
                 )
             }
 
-            item { Spacer(modifier = Modifier.height(80.dp)) }
+            item { Spacer(modifier = Modifier.height(120.dp)) }
         }
     }
 
