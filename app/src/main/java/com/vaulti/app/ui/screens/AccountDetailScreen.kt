@@ -51,6 +51,7 @@ fun AccountDetailScreen(
     val accountMap = remember(accounts) { accounts.associateBy { it.id } }
 
     var showMenu by remember { mutableStateOf(false) }
+    var showRenameDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var transactionToDelete by remember { mutableStateOf<Transaction?>(null) }
 
@@ -97,6 +98,13 @@ fun AccountDetailScreen(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false }
                         ) {
+                            DropdownMenuItem(
+                                text = { Text("Rename") },
+                                onClick = {
+                                    showMenu = false
+                                    showRenameDialog = true
+                                }
+                            )
                             DropdownMenuItem(
                                 text = { Text("Delete Account", color = MaterialTheme.colorScheme.error) },
                                 onClick = {
@@ -338,6 +346,41 @@ fun AccountDetailScreen(
             },
             dismissButton = {
                 TextButton(onClick = { transactionToDelete = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showRenameDialog && account != null) {
+        var newName by remember { mutableStateOf(account.name) }
+        AlertDialog(
+            onDismissRequest = { showRenameDialog = false },
+            title = { Text("Rename Account") },
+            text = {
+                OutlinedTextField(
+                    value = newName,
+                    onValueChange = { newName = it },
+                    label = { Text("Account Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (newName.isNotBlank()) {
+                            accountViewModel.updateAccount(account.copy(name = newName))
+                            showRenameDialog = false
+                        }
+                    },
+                    enabled = newName.isNotBlank()
+                ) {
+                    Text("Rename")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRenameDialog = false }) {
                     Text("Cancel")
                 }
             }
