@@ -137,6 +137,7 @@ fun AccountsScreen(
                     }
                 }
             }
+            }
 
             if (sortedAccounts.isEmpty()) {
                 item {
