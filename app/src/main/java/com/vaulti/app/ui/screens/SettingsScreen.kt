@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
+import com.vaulti.app.data.database.entity.Category
 import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.ui.theme.ThemeMode
 import com.vaulti.app.viewmodel.SettingsViewModel
@@ -48,6 +49,7 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var categoryToDelete by remember { mutableStateOf<Category?>(null) }
 
     val packageName = context.packageName
     val versionName = try {
@@ -245,7 +247,7 @@ fun SettingsScreen(
                             ) {
                                 Text(cat.name, style = MaterialTheme.typography.bodyMedium)
                                 if (categories.size > 1) {
-                                    IconButton(onClick = { viewModel.deleteCategory(cat) }) {
+                                    IconButton(onClick = { categoryToDelete = cat }) {
                                         Icon(Icons.Filled.Delete, contentDescription = "Delete", modifier = Modifier.size(18.dp))
                                     }
                                 }
@@ -446,6 +448,30 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    categoryToDelete?.let { cat ->
+        AlertDialog(
+            onDismissRequest = { categoryToDelete = null },
+            title = { Text("Delete Category") },
+            text = { Text("Are you sure you want to delete \"${cat.name}\"?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        categoryToDelete = null
+                        viewModel.deleteCategory(cat)
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { categoryToDelete = null }) {
                     Text("Cancel")
                 }
             }
