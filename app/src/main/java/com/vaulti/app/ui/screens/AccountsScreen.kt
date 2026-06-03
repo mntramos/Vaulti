@@ -89,10 +89,17 @@ fun AccountsScreen(
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    Box {
-                        IconButton(onClick = { showSortMenu = true }) {
-                            Icon(Icons.Filled.FilterList, contentDescription = "Sort")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = onToggleBalancesHidden) {
+                            Icon(
+                                if (hideBalance) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                contentDescription = if (hideBalance) "Show balances" else "Hide balances"
+                            )
                         }
+                        Box {
+                            IconButton(onClick = { showSortMenu = true }) {
+                                Icon(Icons.Filled.FilterList, contentDescription = "Sort")
+                            }
                         DropdownMenu(
                             expanded = showSortMenu,
                             onDismissRequest = { showSortMenu = false }
@@ -129,6 +136,7 @@ fun AccountsScreen(
                             )
                         }
                     }
+                }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Card(
