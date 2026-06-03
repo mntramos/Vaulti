@@ -14,6 +14,8 @@ class TransactionRepository(private val transactionDao: TransactionDao) {
     fun getRecentTransactions(limit: Int = 10): Flow<List<Transaction>> = transactionDao.getRecentTransactions(limit)
     fun getTotalExpense(start: Long, end: Long): Flow<Double?> = transactionDao.getTotalExpense(start, end)
     fun getTotalIncome(start: Long, end: Long): Flow<Double?> = transactionDao.getTotalIncome(start, end)
+    fun getCurrentMonthExpense(): Flow<Double?> = transactionDao.getCurrentMonthExpense()
+    fun getCurrentMonthIncome(): Flow<Double?> = transactionDao.getCurrentMonthIncome()
     fun getLastTransactionDateByAccount(): Flow<List<AccountLastTransactionRaw>> = transactionDao.getLastTransactionDateByAccount()
     suspend fun getById(id: Long): Transaction? = transactionDao.getById(id)
     suspend fun insert(transaction: Transaction): Long = transactionDao.insert(transaction)

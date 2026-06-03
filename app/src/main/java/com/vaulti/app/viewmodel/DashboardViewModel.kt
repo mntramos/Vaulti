@@ -44,13 +44,11 @@ class DashboardViewModel @Inject constructor(
         .map { list -> list.groupBy({ it.cId }, { it.lastDate }).mapValues { (_, dates) -> dates.max() } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
-    private val monthAgo = System.currentTimeMillis() - 30L * 24 * 60 * 60 * 1000
-
-    val monthlyExpense: StateFlow<Double> = transactionRepository.getTotalExpense(monthAgo, System.currentTimeMillis())
+    val monthlyExpense: StateFlow<Double> = transactionRepository.getCurrentMonthExpense()
         .map { it ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
-    val monthlyIncome: StateFlow<Double> = transactionRepository.getTotalIncome(monthAgo, System.currentTimeMillis())
+    val monthlyIncome: StateFlow<Double> = transactionRepository.getCurrentMonthIncome()
         .map { it ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 }
