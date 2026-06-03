@@ -28,7 +28,7 @@ import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.viewmodel.AccountViewModel
 
 private enum class AccountSort {
-    NAME_ASC, NAME_DESC, BALANCE_ASC, BALANCE_DESC, LAST_UPDATED_DESC, LAST_UPDATED_ASC
+    NAME_ASC, NAME_DESC, BALANCE_ASC, BALANCE_DESC, LAST_UPDATED_DESC, LAST_UPDATED_ASC, TYPE_ASC, TYPE_DESC
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,6 +54,8 @@ fun AccountsScreen(
             AccountSort.NAME_DESC -> accounts.sortedByDescending { it.name.lowercase() }
             AccountSort.BALANCE_ASC -> accounts.sortedBy { it.balance }
             AccountSort.BALANCE_DESC -> accounts.sortedByDescending { it.balance }
+            AccountSort.TYPE_ASC -> accounts.sortedBy { it.type.displayName }
+            AccountSort.TYPE_DESC -> accounts.sortedByDescending { it.type.displayName }
             AccountSort.LAST_UPDATED_DESC -> accounts.sortedByDescending { lastTransactionDateByAccount[it.id] ?: 0L }
             AccountSort.LAST_UPDATED_ASC -> accounts.sortedBy { lastTransactionDateByAccount[it.id] ?: 0L }
         }
@@ -122,6 +124,16 @@ fun AccountsScreen(
                                 text = { Text("Balance (Low-High)", fontWeight = if (sortOrder == AccountSort.BALANCE_ASC) FontWeight.Bold else FontWeight.Normal) },
                                 onClick = { sortOrder = AccountSort.BALANCE_ASC; showSortMenu = false; appPreferences.accountsSort = AccountSort.BALANCE_ASC.name },
                                 leadingIcon = if (sortOrder == AccountSort.BALANCE_ASC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Type (A-Z)", fontWeight = if (sortOrder == AccountSort.TYPE_ASC) FontWeight.Bold else FontWeight.Normal) },
+                                onClick = { sortOrder = AccountSort.TYPE_ASC; showSortMenu = false; appPreferences.accountsSort = AccountSort.TYPE_ASC.name },
+                                leadingIcon = if (sortOrder == AccountSort.TYPE_ASC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Type (Z-A)", fontWeight = if (sortOrder == AccountSort.TYPE_DESC) FontWeight.Bold else FontWeight.Normal) },
+                                onClick = { sortOrder = AccountSort.TYPE_DESC; showSortMenu = false; appPreferences.accountsSort = AccountSort.TYPE_DESC.name },
+                                leadingIcon = if (sortOrder == AccountSort.TYPE_DESC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
                             )
                             DropdownMenuItem(
                                 text = { Text("Last Updated (Newest)", fontWeight = if (sortOrder == AccountSort.LAST_UPDATED_DESC) FontWeight.Bold else FontWeight.Normal) },
