@@ -214,6 +214,13 @@ fun VaultiMainScreen(
                     appPreferences = appPreferences,
                     themeMode = themeMode,
                     onThemeChanged = onThemeChanged,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToCategories = { navController.navigate("categories") }
+                )
+            }
+
+            composable("categories") {
+                CategoriesScreen(
                     onNavigateBack = { navController.popBackStack() }
                 )
             }

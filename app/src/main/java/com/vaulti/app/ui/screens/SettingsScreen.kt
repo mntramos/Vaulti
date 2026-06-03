@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.FileDownload
@@ -26,7 +27,6 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
-import com.vaulti.app.data.database.entity.Category
 import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.ui.theme.ThemeMode
 import com.vaulti.app.viewmodel.SettingsViewModel
@@ -42,14 +42,14 @@ fun SettingsScreen(
     appPreferences: AppPreferences,
     themeMode: ThemeMode,
     onThemeChanged: (ThemeMode) -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onNavigateToCategories: () -> Unit
 ) {
     val context = LocalContext.current
     val viewModel: SettingsViewModel = hiltViewModel()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var categoryToDelete by remember { mutableStateOf<Category?>(null) }
 
     val packageName = context.packageName
     val versionName = try {
@@ -235,55 +235,24 @@ fun SettingsScreen(
                     color = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    val categories by viewModel.categories.collectAsState()
-                    var newCategory by remember { mutableStateOf("") }
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        categories.forEach { cat ->
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(cat.name, style = MaterialTheme.typography.bodyMedium)
-                                if (categories.size > 1) {
-                                    IconButton(onClick = { categoryToDelete = cat }) {
-                                        Icon(Icons.Filled.Delete, contentDescription = "Delete", modifier = Modifier.size(18.dp))
-                                    }
-                                }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            OutlinedTextField(
-                                value = newCategory,
-                                onValueChange = { newCategory = it },
-                                placeholder = { Text("New category") },
-                                modifier = Modifier.weight(1f),
-                                singleLine = true
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = {
-                                    if (newCategory.isNotBlank()) {
-                                        val name = newCategory.trim()
-                                        val exists = viewModel.categories.value.any { it.name.equals(name, ignoreCase = true) }
-                                        if (exists) {
-                                            scope.launch { snackbarHostState.showSnackbar("Category \"$name\" already exists", duration = SnackbarDuration.Short) }
-                                        } else {
-                                            viewModel.addCategory(name)
-                                            newCategory = ""
-                                        }
-                                    }
-                                },
-                                enabled = newCategory.isNotBlank()
-                            ) {
-                                Text("Add")
-                            }
-                        }
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onNavigateToCategories() }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Manage Categories", style = MaterialTheme.typography.bodyLarge)
+                        Icon(
+                            Icons.Filled.ChevronRight,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 }
             }
@@ -454,30 +423,6 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    categoryToDelete?.let { cat ->
-        AlertDialog(
-            onDismissRequest = { categoryToDelete = null },
-            title = { Text("Delete Category") },
-            text = { Text("Are you sure you want to delete \"${cat.name}\"?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        categoryToDelete = null
-                        viewModel.deleteCategory(cat)
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("Delete")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { categoryToDelete = null }) {
                     Text("Cancel")
                 }
             }
