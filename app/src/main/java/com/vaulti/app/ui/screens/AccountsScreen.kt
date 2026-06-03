@@ -42,7 +42,6 @@ fun AccountsScreen(
     onToggleBalancesHidden: () -> Unit = {}
 ) {
     val accounts by viewModel.accounts.collectAsState()
-    val totalBalance by viewModel.totalBalance.collectAsState()
     val lastTransactionDateByAccount by viewModel.lastTransactionDateByAccount.collectAsState()
 
     var showAddDialog by remember { mutableStateOf(false) }
@@ -128,54 +127,6 @@ fun AccountsScreen(
                                 leadingIcon = if (sortOrder == AccountSort.LAST_UPDATED_ASC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
                             )
                         }
-                    }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = "Total Balance",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                IconButton(
-                                    onClick = onToggleBalancesHidden,
-                                    modifier = Modifier.size(24.dp)
-                                ) {
-                                    Icon(
-                                        if (hideBalance) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                                        contentDescription = if (hideBalance) "Show balances" else "Hide balances",
-                                        tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                            }
-                            Text(
-                                text = if (hideBalance) "₱*****" else "₱${FormatUtils.formatAmount(totalBalance)}",
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                        Text(
-                            text = "${accounts.size} accounts",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                        )
                     }
                 }
             }
