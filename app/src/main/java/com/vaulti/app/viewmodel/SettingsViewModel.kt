@@ -40,7 +40,10 @@ class SettingsViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun addCategory(name: String) {
-        viewModelScope.launch { categoryRepository.insert(name) }
+        val exists = categories.value.any { it.name.equals(name, ignoreCase = true) }
+        if (!exists) {
+            viewModelScope.launch { categoryRepository.insert(name) }
+        }
     }
 
     fun deleteCategory(category: Category) {

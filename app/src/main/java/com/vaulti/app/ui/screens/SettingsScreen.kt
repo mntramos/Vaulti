@@ -269,8 +269,14 @@ fun SettingsScreen(
                             Button(
                                 onClick = {
                                     if (newCategory.isNotBlank()) {
-                                        viewModel.addCategory(newCategory.trim())
-                                        newCategory = ""
+                                        val name = newCategory.trim()
+                                        val exists = viewModel.categories.value.any { it.name.equals(name, ignoreCase = true) }
+                                        if (exists) {
+                                            scope.launch { snackbarHostState.showSnackbar("Category \"$name\" already exists", duration = SnackbarDuration.Short) }
+                                        } else {
+                                            viewModel.addCategory(name)
+                                            newCategory = ""
+                                        }
                                     }
                                 },
                                 enabled = newCategory.isNotBlank()

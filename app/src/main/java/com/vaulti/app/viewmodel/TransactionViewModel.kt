@@ -51,8 +51,9 @@ class TransactionViewModel @Inject constructor(
     }
 
     fun addCategory(name: String) {
-        viewModelScope.launch {
-            categoryRepository.insert(name)
+        val exists = categories.value.any { it.name.equals(name, ignoreCase = true) }
+        if (!exists) {
+            viewModelScope.launch { categoryRepository.insert(name) }
         }
     }
 
