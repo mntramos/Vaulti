@@ -165,6 +165,8 @@ fun BudgetsScreen(
                     onEdit = { showEditDialog = budget }
                 )
             }
+
+            item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
 

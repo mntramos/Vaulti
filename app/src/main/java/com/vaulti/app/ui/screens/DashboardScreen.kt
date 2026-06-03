@@ -403,6 +403,8 @@ fun DashboardScreen(
                         onDeleteClick = { onTransactionDelete(transaction) }
                     )
                 }
+
+                item { Spacer(modifier = Modifier.height(80.dp)) }
             }
         }
     }

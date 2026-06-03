@@ -202,6 +202,8 @@ fun GoalsScreen(
                     onComplete = { viewModel.completeGoal(goal.id) }
                 )
             }
+
+            item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }
 
