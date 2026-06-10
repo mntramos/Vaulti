@@ -17,6 +17,9 @@
 -keep class dagger.hilt.** { *; }
 -keep class javax.inject.** { *; }
 
+# Crashlytics
+-keepattributes SourceFile,LineNumberTable
+
 # Firebase
 -keepattributes Signature
 -keepattributes *Annotation*
