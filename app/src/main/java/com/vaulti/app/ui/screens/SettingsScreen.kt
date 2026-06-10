@@ -53,6 +53,7 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showLogoutDialog by remember { mutableStateOf(false) }
 
     val packageName = context.packageName
     val versionName = try {
@@ -321,7 +322,7 @@ fun SettingsScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onLogout() }
+                        .clickable { showLogoutDialog = true }
                 ) {
                     Row(
                         modifier = Modifier
@@ -428,6 +429,31 @@ fun SettingsScreen(
 
             item { Spacer(modifier = Modifier.height(32.dp)) }
         }
+    }
+
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false },
+            title = { Text("Log Out") },
+            text = {
+                Text("Are you sure you want to log out? You will need to sign in again to access your data.")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLogoutDialog = false
+                        onLogout()
+                    },
+                ) {
+                    Text("Log Out")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLogoutDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     if (showDeleteDialog) {
