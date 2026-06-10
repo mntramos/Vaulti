@@ -12,5 +12,6 @@ data class Goal(
     val targetDate: Long? = null,
     val color: Long = 0xFF6C63FF,
     val isCompleted: Boolean = false,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val lastModified: Long = System.currentTimeMillis()
 )

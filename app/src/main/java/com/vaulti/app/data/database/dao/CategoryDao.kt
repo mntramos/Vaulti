@@ -9,10 +9,13 @@ interface CategoryDao {
     @Query("SELECT * FROM categories ORDER BY name ASC")
     fun getAll(): Flow<List<Category>>
 
+    @Query("SELECT * FROM categories WHERE id = :id")
+    suspend fun getById(id: Long): Category?
+
     @Query("SELECT COUNT(*) FROM categories")
     suspend fun count(): Int
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(category: Category): Long
 
     @Delete

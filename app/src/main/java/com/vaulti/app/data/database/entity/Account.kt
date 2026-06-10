@@ -13,6 +13,6 @@ data class Account(
     val color: Long = 0xFF6C63FF,
     val isArchived: Boolean = false,
     val isLiability: Boolean = false,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val lastModified: Long = System.currentTimeMillis()
 )
-

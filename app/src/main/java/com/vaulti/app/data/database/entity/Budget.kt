@@ -12,6 +12,6 @@ data class Budget(
     val period: BudgetPeriod,
     val color: Long = 0xFF6C63FF,
     val startDate: Long = System.currentTimeMillis(),
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
+    val lastModified: Long = System.currentTimeMillis()
 )
-

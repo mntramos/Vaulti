@@ -12,6 +12,9 @@ interface AccountDao {
     @Query("SELECT * FROM accounts ORDER BY balance DESC")
     fun getAll(): Flow<List<Account>>
 
+    @Query("SELECT * FROM accounts WHERE id = :id")
+    suspend fun getById(id: Long): Account?
+
     @Query("SELECT SUM(balance) FROM accounts WHERE isArchived = 0")
     fun getTotalBalance(): Flow<Double?>
 
@@ -35,5 +38,4 @@ interface AccountDao {
 
     @Query("UPDATE accounts SET isArchived = 1 WHERE id = :id")
     suspend fun archive(id: Long)
-
 }

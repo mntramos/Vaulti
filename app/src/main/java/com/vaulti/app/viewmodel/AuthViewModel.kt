@@ -8,6 +8,7 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.GoogleAuthProvider
 import com.vaulti.app.data.database.VaultiDatabase
+import com.vaulti.app.data.sync.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -21,7 +22,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
-    private val database: VaultiDatabase
+    private val database: VaultiDatabase,
+    private val syncManager: SyncManager
 ) : ViewModel() {
 
     val isLoggedIn: StateFlow<Boolean> = callbackFlow {
@@ -49,6 +51,8 @@ class AuthViewModel @Inject constructor(
                     firebaseAuth.signOut()
                     _authResult.emit(Result.failure(EmailNotVerifiedException()))
                 } else {
+                    syncManager.pullAll()
+                    syncManager.startListening()
                     _authResult.emit(Result.success(Unit))
                 }
             } catch (e: FirebaseAuthInvalidUserException) {
@@ -83,6 +87,8 @@ class AuthViewModel @Inject constructor(
             try {
                 val credential = GoogleAuthProvider.getCredential(idToken, null)
                 firebaseAuth.signInWithCredential(credential).await()
+                syncManager.pullAll()
+                syncManager.startListening()
                 _authResult.emit(Result.success(Unit))
             } catch (e: Exception) {
                 Log.e(TAG, "Google sign-in failed", e)
@@ -99,6 +105,7 @@ class AuthViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
+            syncManager.stopListening()
             withContext(Dispatchers.IO) {
                 database.clearAllTables()
             }
