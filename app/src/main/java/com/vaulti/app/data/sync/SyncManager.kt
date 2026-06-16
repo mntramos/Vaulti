@@ -43,47 +43,67 @@ class SyncManager @Inject constructor(
 
     fun pushAccount(account: Account) {
         val ref = accountsRef() ?: return
-        ref.document(account.id.toString()).set(account.toMap())
+        scope.launch {
+            try { ref.document(account.id.toString()).set(account.toMap()) } catch (_: Exception) {}
+        }
     }
 
     fun deleteAccount(id: Long) {
-        accountsRef()?.document(id.toString())?.delete()
+        scope.launch {
+            try { accountsRef()?.document(id.toString())?.delete() } catch (_: Exception) {}
+        }
     }
 
     fun pushTransaction(transaction: Transaction) {
         val ref = transactionsRef() ?: return
-        ref.document(transaction.id.toString()).set(transaction.toMap())
+        scope.launch {
+            try { ref.document(transaction.id.toString()).set(transaction.toMap()) } catch (_: Exception) {}
+        }
     }
 
     fun deleteTransaction(id: Long) {
-        transactionsRef()?.document(id.toString())?.delete()
+        scope.launch {
+            try { transactionsRef()?.document(id.toString())?.delete() } catch (_: Exception) {}
+        }
     }
 
     fun pushBudget(budget: Budget) {
         val ref = budgetsRef() ?: return
-        ref.document(budget.id.toString()).set(budget.toMap())
+        scope.launch {
+            try { ref.document(budget.id.toString()).set(budget.toMap()) } catch (_: Exception) {}
+        }
     }
 
     fun deleteBudget(id: Long) {
-        budgetsRef()?.document(id.toString())?.delete()
+        scope.launch {
+            try { budgetsRef()?.document(id.toString())?.delete() } catch (_: Exception) {}
+        }
     }
 
     fun pushGoal(goal: Goal) {
         val ref = goalsRef() ?: return
-        ref.document(goal.id.toString()).set(goal.toMap())
+        scope.launch {
+            try { ref.document(goal.id.toString()).set(goal.toMap()) } catch (_: Exception) {}
+        }
     }
 
     fun deleteGoal(id: Long) {
-        goalsRef()?.document(id.toString())?.delete()
+        scope.launch {
+            try { goalsRef()?.document(id.toString())?.delete() } catch (_: Exception) {}
+        }
     }
 
     fun pushCategory(category: Category) {
         val ref = categoriesRef() ?: return
-        ref.document(category.id.toString()).set(category.toMap())
+        scope.launch {
+            try { ref.document(category.id.toString()).set(category.toMap()) } catch (_: Exception) {}
+        }
     }
 
     fun deleteCategory(id: Long) {
-        categoriesRef()?.document(id.toString())?.delete()
+        scope.launch {
+            try { categoriesRef()?.document(id.toString())?.delete() } catch (_: Exception) {}
+        }
     }
 
     suspend fun pullAll() = withContext(Dispatchers.IO) {
