@@ -10,13 +10,11 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.vaulti.app.data.database.VaultiDatabase
 import com.vaulti.app.data.sync.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -106,9 +104,6 @@ class AuthViewModel @Inject constructor(
     fun logout() {
         viewModelScope.launch {
             syncManager.stopListening()
-            withContext(Dispatchers.IO) {
-                database.clearAllTables()
-            }
             firebaseAuth.signOut()
         }
     }
