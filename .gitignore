@@ -12,3 +12,4 @@ local.properties
 /release.keystore
 *.apk
 /app/release
+/app/google-services.json
