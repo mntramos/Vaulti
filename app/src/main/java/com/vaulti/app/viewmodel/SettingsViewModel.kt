@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.vaulti.app.data.database.VaultiDatabase
 import com.vaulti.app.data.database.entity.AccountType
 import com.vaulti.app.data.database.entity.BudgetPeriod
@@ -15,11 +16,13 @@ import com.vaulti.app.data.repository.BudgetRepository
 import com.vaulti.app.data.repository.CategoryRepository
 import com.vaulti.app.data.repository.GoalRepository
 import com.vaulti.app.data.repository.TransactionRepository
+import com.vaulti.app.data.sync.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -33,6 +36,8 @@ class SettingsViewModel @Inject constructor(
     private val budgetRepository: BudgetRepository,
     private val goalRepository: GoalRepository,
     private val categoryRepository: CategoryRepository,
+    private val syncManager: SyncManager,
+    private val firebaseAuth: FirebaseAuth,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -226,9 +231,15 @@ class SettingsViewModel @Inject constructor(
 
     fun deleteAllData() {
         viewModelScope.launch {
+            syncManager.deleteAll()
+            syncManager.stopListening()
             withContext(Dispatchers.IO) {
                 database.clearAllTables()
             }
+            try {
+                firebaseAuth.currentUser?.delete()?.await()
+            } catch (_: Exception) {}
+            firebaseAuth.signOut()
         }
     }
 }

@@ -106,6 +106,19 @@ class SyncManager @Inject constructor(
         }
     }
 
+    suspend fun deleteAll() {
+        val currentUid = uid ?: return
+        try {
+            val baseRef = firestore.collection("users").document(currentUid)
+            for (collection in listOf("accounts", "transactions", "budgets", "goals", "categories")) {
+                val snapshot = baseRef.collection(collection).get().await()
+                for (doc in snapshot.documents) {
+                    doc.reference.delete()
+                }
+            }
+        } catch (_: Exception) {}
+    }
+
     suspend fun pullAll() = withContext(Dispatchers.IO) {
         val currentUid = uid ?: return@withContext
 

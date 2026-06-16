@@ -421,7 +421,7 @@ fun SettingsScreen(
                         ) {
                             Icon(Icons.Filled.DeleteForever, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Delete All Data")
+                            Text("Delete Account")
                         }
                     }
                 }
@@ -459,22 +459,19 @@ fun SettingsScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete All Data") },
+            title = { Text("Delete Account") },
             text = {
-                Text("Are you sure you want to delete ALL data? This will remove all accounts, transactions, budgets, and goals. This action cannot be undone.")
+                Text("This will permanently delete your account and all your data from the server. This action cannot be undone.")
             },
             confirmButton = {
                 TextButton(
                     onClick = {
                         showDeleteDialog = false
-                        scope.launch {
-                            viewModel.deleteAllData()
-                            snackbarHostState.showSnackbar("All data deleted", actionLabel = "Dismiss", duration = SnackbarDuration.Short)
-                        }
+                        viewModel.deleteAllData()
                     },
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Delete Everything")
+                    Text("Delete Account")
                 }
             },
             dismissButton = {
