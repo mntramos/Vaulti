@@ -121,7 +121,13 @@ class SyncManager @Inject constructor(
         try {
             val accountSnapshot = baseRef.collection("accounts").get().await()
             for (doc in accountSnapshot.documents) {
-                doc.data?.toAccount()?.let { accountDao.insert(it) }
+                val account = doc.data?.toAccount() ?: continue
+                val existing = accountDao.getById(account.id)
+                if (existing != null) {
+                    accountDao.update(account)
+                } else {
+                    accountDao.insert(account)
+                }
             }
         } catch (_: Exception) {}
 
@@ -162,7 +168,14 @@ class SyncManager @Inject constructor(
             snapshot?.documentChanges?.forEach { change ->
                 if (change.type == DocumentChange.Type.REMOVED) return@forEach
                 val account = change.document.data.toAccount() ?: return@forEach
-                scope.launch { database.accountDao().insert(account) }
+                scope.launch {
+                    val existing = database.accountDao().getById(account.id)
+                    if (existing != null) {
+                        database.accountDao().update(account)
+                    } else {
+                        database.accountDao().insert(account)
+                    }
+                }
             }
         }
         listeners.add(accountReg)
