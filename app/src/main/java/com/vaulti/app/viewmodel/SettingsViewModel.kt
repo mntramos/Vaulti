@@ -44,6 +44,8 @@ class SettingsViewModel @Inject constructor(
     val categories = categoryRepository.getAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val userEmail: String? = firebaseAuth.currentUser?.email
+
     fun addCategory(name: String) {
         val exists = categories.value.any { it.name.equals(name, ignoreCase = true) }
         if (!exists) {
