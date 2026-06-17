@@ -89,7 +89,7 @@ fun VaultiMainScreen(
     val startDestination = if (isLoggedIn) "dashboard" else "login"
 
     LaunchedEffect(isLoggedIn) {
-        if (isLoggedIn) {
+        if (isLoggedIn && navController.currentDestination?.route != "dashboard") {
             navController.navigate("dashboard") {
                 popUpTo(0) { inclusive = true }
             }
