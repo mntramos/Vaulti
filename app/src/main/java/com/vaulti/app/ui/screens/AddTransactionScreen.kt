@@ -107,17 +107,16 @@ fun AddTransactionScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .imePadding()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(16.dp)
         ) {
-            Text(
-                text = if (isEditing) "Edit Transaction" else "New Transaction",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
 
-            Row(
+                Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
@@ -322,6 +321,8 @@ fun AddTransactionScreen(
                 ) {
                     DatePicker(state = datePickerState)
                 }
+            }
+
             }
 
             Spacer(modifier = Modifier.height(16.dp))
