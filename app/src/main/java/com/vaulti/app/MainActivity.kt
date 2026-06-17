@@ -6,7 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -113,28 +115,13 @@ fun VaultiMainScreen(
         }
     }
 
-    Scaffold(
-        bottomBar = {
-            if (showBottomBar) {
-                VaultiBottomNavBar(
-                    currentRoute = currentRoute,
-                    onItemSelected = { item ->
-                        navController.navigate(item.route) {
-                            popUpTo("dashboard") {
-                                inclusive = false
-                            }
-                            launchSingleTop = true
-                        }
-                    }
-                )
-            }
-        }
-    ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = startDestination,
-            modifier = Modifier.padding(innerPadding)
-        ) {
+    Scaffold { innerPadding ->
+        Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            NavHost(
+                navController = navController,
+                startDestination = startDestination,
+                modifier = Modifier.matchParentSize()
+            ) {
             composable("login") {
                 val context = LocalContext.current
                 LoginScreen(
@@ -284,6 +271,22 @@ fun VaultiMainScreen(
             composable("categories") {
                 CategoriesScreen(
                     onNavigateBack = { navController.popBackStack() }
+                )
+            }
+        }
+
+            if (showBottomBar) {
+                VaultiBottomNavBar(
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    currentRoute = currentRoute,
+                    onItemSelected = { item ->
+                        navController.navigate(item.route) {
+                            popUpTo("dashboard") {
+                                inclusive = false
+                            }
+                            launchSingleTop = true
+                        }
+                    }
                 )
             }
         }

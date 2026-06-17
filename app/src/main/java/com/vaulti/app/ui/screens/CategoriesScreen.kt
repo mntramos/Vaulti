@@ -42,63 +42,64 @@ fun CategoriesScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp),
-            state = rememberLazyListState()
-        ) {
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-                categories.forEach { cat ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(cat.name, style = MaterialTheme.typography.bodyMedium)
-                        if (categories.size > 1) {
-                            IconButton(onClick = { categoryToDelete = cat }) {
-                                Icon(Icons.Filled.Delete, contentDescription = "Delete", modifier = Modifier.size(18.dp))
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 16.dp),
+                state = rememberLazyListState()
+            ) {
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    categories.forEach { cat ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(cat.name, style = MaterialTheme.typography.bodyMedium)
+                            if (categories.size > 1) {
+                                IconButton(onClick = { categoryToDelete = cat }) {
+                                    Icon(Icons.Filled.Delete, contentDescription = "Delete", modifier = Modifier.size(18.dp))
+                                }
                             }
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-                HorizontalDivider()
-                Spacer(modifier = Modifier.height(12.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    OutlinedTextField(
-                        value = newCategory,
-                        onValueChange = { newCategory = it },
-                        placeholder = { Text("New category") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = {
-                            if (newCategory.isNotBlank()) {
-                                val name = newCategory.trim()
-                                val exists = categories.any { it.name.equals(name, ignoreCase = true) }
-                                if (exists) {
-                                    scope.launch { snackbarHostState.showSnackbar("Category \"$name\" already exists", duration = SnackbarDuration.Short) }
-                                } else {
-                                    viewModel.addCategory(name)
-                                    newCategory = ""
-                                }
+            }
+            HorizontalDivider()
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                OutlinedTextField(
+                    value = newCategory,
+                    onValueChange = { newCategory = it },
+                    placeholder = { Text("New category") },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    onClick = {
+                        if (newCategory.isNotBlank()) {
+                            val name = newCategory.trim()
+                            val exists = categories.any { it.name.equals(name, ignoreCase = true) }
+                            if (exists) {
+                                scope.launch { snackbarHostState.showSnackbar("Category \"$name\" already exists", duration = SnackbarDuration.Short) }
+                            } else {
+                                viewModel.addCategory(name)
+                                newCategory = ""
                             }
-                        },
-                        enabled = newCategory.isNotBlank()
-                    ) {
-                        Text("Add")
-                    }
+                        }
+                    },
+                    enabled = newCategory.isNotBlank()
+                ) {
+                    Text("Add")
                 }
             }
         }

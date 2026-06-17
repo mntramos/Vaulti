@@ -13,6 +13,7 @@ import androidx.compose.material.icons.outlined.Savings
 import androidx.compose.material.icons.outlined.TrackChanges
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class BottomNavItem(
@@ -38,10 +39,11 @@ val bottomNavItems = listOf(
 
 @Composable
 fun VaultiBottomNavBar(
+    modifier: Modifier = Modifier,
     currentRoute: String?,
     onItemSelected: (BottomNavItem) -> Unit
 ) {
-    NavigationBar {
+    NavigationBar(modifier = modifier) {
         bottomNavItems.forEach { item ->
             val selected = currentRoute == item.route
             NavigationBarItem(
