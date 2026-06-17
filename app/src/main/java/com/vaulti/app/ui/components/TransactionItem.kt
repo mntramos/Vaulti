@@ -1,9 +1,7 @@
 package com.vaulti.app.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -29,8 +27,7 @@ fun TransactionItem(
     modifier: Modifier = Modifier,
     accountName: String = "",
     toAccountName: String = "",
-    onEditClick: () -> Unit = {},
-    onDeleteClick: () -> Unit = {}
+    onEditClick: () -> Unit = {}
 ) {
     val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
     val amountColor = when (transaction.type) {
@@ -45,7 +42,9 @@ fun TransactionItem(
     }
 
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onEditClick() },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -117,14 +116,6 @@ fun TransactionItem(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onEditClick, modifier = Modifier.size(24.dp)) {
-                        Icon(Icons.Filled.Edit, contentDescription = "Edit transaction", modifier = Modifier.size(18.dp))
-                    }
-                    IconButton(onClick = onDeleteClick, modifier = Modifier.size(24.dp)) {
-                        Icon(Icons.Filled.Delete, contentDescription = "Delete transaction", modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.error)
-                    }
-                }
                 Text(
                     text = "$prefix₱${FormatUtils.formatAmount(transaction.amount)}",
                     style = MaterialTheme.typography.titleMedium,

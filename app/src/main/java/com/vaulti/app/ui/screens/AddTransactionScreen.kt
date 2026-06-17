@@ -8,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -35,6 +36,7 @@ fun AddTransactionScreen(
     val budgets by transactionViewModel.budgets.collectAsState()
     val categories by transactionViewModel.categories.collectAsState()
     val isEditing = existingTransaction != null
+    var showDeleteConfirm by remember { mutableStateOf(false) }
 
     var selectedType by remember(existingTransaction) {
         mutableStateOf(existingTransaction?.type ?: TransactionType.EXPENSE)
@@ -90,7 +92,13 @@ fun AddTransactionScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
-                actions = {}
+                actions = {
+                    if (isEditing) {
+                        IconButton(onClick = { showDeleteConfirm = true }) {
+                            Icon(Icons.Filled.Delete, contentDescription = "Delete transaction", tint = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
             )
         }
     ) { padding ->
@@ -392,6 +400,30 @@ fun AddTransactionScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showAddCategoryDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showDeleteConfirm && existingTransaction != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Delete Transaction") },
+            text = { Text("Are you sure you want to delete this transaction? This cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        transactionViewModel.deleteTransaction(existingTransaction)
+                        onNavigateBack()
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
                     Text("Cancel")
                 }
             }

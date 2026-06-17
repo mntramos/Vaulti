@@ -53,7 +53,6 @@ fun AccountDetailScreen(
     var showMenu by remember { mutableStateOf(false) }
     var showRenameDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
-    var transactionToDelete by remember { mutableStateOf<Transaction?>(null) }
 
     var filterType by remember { mutableStateOf<TransactionType?>(null) }
     var filterStartDate by remember { mutableStateOf<Long?>(null) }
@@ -265,8 +264,7 @@ fun AccountDetailScreen(
                     transaction = transaction,
                     accountName = accountMap[transaction.accountId]?.name ?: "",
                     toAccountName = if (transaction.toAccountId != null) accountMap[transaction.toAccountId]?.name ?: "" else "",
-                    onEditClick = { onTransactionClick(transaction) },
-                    onDeleteClick = { transactionToDelete = transaction }
+                    onEditClick = { onTransactionClick(transaction) }
                 )
             }
         }
@@ -326,30 +324,6 @@ fun AccountDetailScreen(
         ) {
             DatePicker(state = datePickerState)
         }
-    }
-
-    transactionToDelete?.let { transaction ->
-        AlertDialog(
-            onDismissRequest = { transactionToDelete = null },
-            title = { Text("Delete Transaction") },
-            text = { Text("Are you sure you want to delete this transaction? This cannot be undone.") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        transactionViewModel.deleteTransaction(transaction)
-                        transactionToDelete = null
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("Delete")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { transactionToDelete = null }) {
-                    Text("Cancel")
-                }
-            }
-        )
     }
 
     if (showRenameDialog && account != null) {

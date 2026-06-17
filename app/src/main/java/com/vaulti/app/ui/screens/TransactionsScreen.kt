@@ -41,7 +41,6 @@ fun TransactionsScreen(
     var visibleCount by remember { mutableIntStateOf(appPreferences.transactionsPageSize) }
     var selectedIds by remember { mutableStateOf(setOf<Long>()) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
-    var showSingleDeleteConfirm by remember { mutableStateOf<Transaction?>(null) }
 
     val pageSize = appPreferences.transactionsPageSize
 
@@ -228,8 +227,7 @@ fun TransactionsScreen(
                             transaction = transaction,
                             accountName = accountMap[transaction.accountId]?.name ?: "",
                             toAccountName = if (transaction.toAccountId != null) accountMap[transaction.toAccountId]?.name ?: "" else "",
-                            onEditClick = { onTransactionClick(transaction) },
-                            onDeleteClick = { showSingleDeleteConfirm = transaction }
+                            onEditClick = { onTransactionClick(transaction) }
                         )
                     }
                 }
@@ -252,30 +250,6 @@ fun TransactionsScreen(
                 item { Spacer(modifier = Modifier.height(120.dp)) }
             }
         }
-    }
-
-    showSingleDeleteConfirm?.let { transaction ->
-        AlertDialog(
-            onDismissRequest = { showSingleDeleteConfirm = null },
-            title = { Text("Delete Transaction") },
-            text = { Text("Are you sure you want to delete this transaction? This cannot be undone.") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.deleteTransaction(transaction)
-                        showSingleDeleteConfirm = null
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("Delete")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showSingleDeleteConfirm = null }) {
-                    Text("Cancel")
-                }
-            }
-        )
     }
 
     if (showDeleteConfirm) {

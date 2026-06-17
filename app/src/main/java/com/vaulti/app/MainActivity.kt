@@ -23,7 +23,6 @@ import androidx.navigation.navArgument
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
-import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.ui.components.VaultiBottomNavBar
 import com.vaulti.app.ui.screens.*
 import com.vaulti.app.ui.theme.AppPreferences
@@ -76,8 +75,6 @@ fun VaultiMainScreen(
         balancesHidden = !balancesHidden
         appPreferences.balancesHidden = balancesHidden
     }
-
-    var transactionToDelete by remember { mutableStateOf<Transaction?>(null) }
 
     val mainRoutes = listOf("dashboard", "transactions", "accounts", "budgets", "goals")
     val showBottomBar = currentRoute in mainRoutes
@@ -159,7 +156,6 @@ fun VaultiMainScreen(
                     onAccountClick = { account ->
                         navController.navigate("account_detail/${account.id}")
                     },
-                    onTransactionDelete = { transactionToDelete = it },
                     onSeeAllTransactions = { navController.navigate("transactions") },
                     onSeeAllAccounts = { navController.navigate("accounts") },
                     onSettingsClick = { navController.navigate("settings") }
@@ -292,27 +288,4 @@ fun VaultiMainScreen(
         }
     }
 
-    transactionToDelete?.let { transaction ->
-        AlertDialog(
-            onDismissRequest = { transactionToDelete = null },
-            title = { Text("Delete Transaction") },
-            text = { Text("Are you sure you want to delete this transaction? This cannot be undone.") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        transactionViewModel.deleteTransaction(transaction)
-                        transactionToDelete = null
-                    },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("Delete")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { transactionToDelete = null }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
 }
