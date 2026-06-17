@@ -74,7 +74,8 @@ fun TransactionsScreen(
                     Icon(Icons.Filled.Add, contentDescription = "Add Transaction")
                 }
             }
-        }
+        },
+        modifier = Modifier.padding(bottom = 80.dp)
     ) { padding ->
         if (allTransactions.isEmpty()) {
             Box(
@@ -120,7 +121,7 @@ fun TransactionsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {

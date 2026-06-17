@@ -66,7 +66,8 @@ fun AccountsScreen(
             FloatingActionButton(onClick = { showAddDialog = true }) {
                 Icon(Icons.Filled.Add, contentDescription = "Add Account")
             }
-        }
+        },
+        modifier = Modifier.padding(bottom = 80.dp)
     ) { _ ->
         val listState = rememberLazyListState()
         LaunchedEffect(Unit) { listState.scrollToItem(0) }
@@ -76,7 +77,7 @@ fun AccountsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
