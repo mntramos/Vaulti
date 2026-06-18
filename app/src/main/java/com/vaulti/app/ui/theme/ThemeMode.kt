@@ -50,4 +50,8 @@ class AppPreferences(context: Context) {
     var balancesHidden: Boolean
         get() = prefs.getBoolean("balances_hidden", false)
         set(value) = prefs.edit {putBoolean("balances_hidden", value) }
+
+    var currency: String
+        get() = prefs.getString("currency", "PHP") ?: "PHP"
+        set(value) = prefs.edit { putString("currency", value) }
 }

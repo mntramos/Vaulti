@@ -164,7 +164,8 @@ fun BudgetsScreen(
                 BudgetCard(
                     budget = budget,
                     onDelete = { showDeleteConfirm = budget },
-                    onEdit = { showEditDialog = budget }
+                    onEdit = { showEditDialog = budget },
+                    currency = appPreferences.currency
                 )
             }
 
@@ -178,7 +179,8 @@ fun BudgetsScreen(
             onConfirm = { name, amount, period, color ->
                 viewModel.addBudget(name, amount, period, color)
                 showAddDialog = false
-            }
+            },
+            currency = appPreferences.currency
         )
     }
 
@@ -189,7 +191,8 @@ fun BudgetsScreen(
             onConfirm = { name, amount, period, color ->
                 viewModel.updateBudget(budget, name, amount, period, color)
                 showEditDialog = null
-            }
+            },
+            currency = appPreferences.currency
         )
     }
 
@@ -219,7 +222,7 @@ fun BudgetsScreen(
 }
 
 @Composable
-private fun BudgetCard(budget: Budget, onDelete: (Budget) -> Unit = {}, onEdit: (Budget) -> Unit = {}) {
+private fun BudgetCard(budget: Budget, onDelete: (Budget) -> Unit = {}, onEdit: (Budget) -> Unit = {}, currency: String = "PHP") {
     val progress = if (budget.amount > 0) (budget.spent / budget.amount).toFloat().coerceIn(0f, 1f) else 0f
     val isOverBudget = budget.spent > budget.amount
     val overspent = if (isOverBudget) budget.spent - budget.amount else 0.0
@@ -279,18 +282,19 @@ private fun BudgetCard(budget: Budget, onDelete: (Budget) -> Unit = {}, onEdit: 
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            val bSymbol = FormatUtils.currencySymbol(currency)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "₱${FormatUtils.formatAmount(budget.spent)} spent",
+                    text = "$bSymbol${FormatUtils.formatAmount(budget.spent)} spent",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = if (isOverBudget) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "₱${FormatUtils.formatAmount(budget.amount)}",
+                    text = "$bSymbol${FormatUtils.formatAmount(budget.amount)}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -299,7 +303,7 @@ private fun BudgetCard(budget: Budget, onDelete: (Budget) -> Unit = {}, onEdit: 
             if (isOverBudget) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "₱${FormatUtils.formatAmount(overspent)} over budget",
+                    text = "$bSymbol${FormatUtils.formatAmount(overspent)} over budget",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
                     fontWeight = FontWeight.SemiBold
@@ -314,7 +318,8 @@ private fun BudgetCard(budget: Budget, onDelete: (Budget) -> Unit = {}, onEdit: 
 private fun AddBudgetDialog(
     initial: Budget? = null,
     onDismiss: () -> Unit,
-    onConfirm: (String, Double, BudgetPeriod, Long) -> Unit
+    onConfirm: (String, Double, BudgetPeriod, Long) -> Unit,
+    currency: String = "PHP"
 ) {
     var name by remember { mutableStateOf(initial?.name ?: "") }
     var amount by remember { mutableStateOf(if (initial != null) FormatUtils.formatAmountForEdit(initial.amount) else "") }
@@ -338,7 +343,7 @@ private fun AddBudgetDialog(
                     value = amount,
                     onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) amount = it },
                     label = { Text("Budget Amount") },
-                    prefix = { Text("₱") },
+                    prefix = { Text(FormatUtils.currencySymbol(currency)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth()
                 )

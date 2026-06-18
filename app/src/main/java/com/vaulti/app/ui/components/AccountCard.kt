@@ -19,7 +19,8 @@ import com.vaulti.app.ui.FormatUtils
 fun AccountCard(
     account: Account,
     modifier: Modifier = Modifier,
-    hideBalance: Boolean = false
+    hideBalance: Boolean = false,
+    currency: String = "PHP"
 ) {
     val backgroundColor = Color(account.color)
 
@@ -44,8 +45,9 @@ fun AccountCard(
                 color = Color.White.copy(alpha = 0.8f)
             )
             Spacer(modifier = Modifier.height(12.dp))
+            val symbol = FormatUtils.currencySymbol(currency)
             Text(
-                text = if (hideBalance) "₱*****" else "₱${FormatUtils.formatAmount(account.balance)}",
+                text = if (hideBalance) "${symbol}*****" else "$symbol${FormatUtils.formatAmount(account.balance)}",
                 style = MaterialTheme.typography.headlineMedium,
                 color = Color.White,
                 fontWeight = FontWeight.Bold,

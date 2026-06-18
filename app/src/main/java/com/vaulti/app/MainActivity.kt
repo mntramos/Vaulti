@@ -206,7 +206,8 @@ fun VaultiMainScreen(
                     transactionViewModel = transactionViewModel,
                     accountViewModel = accountViewModel,
                     onNavigateBack = { navController.popBackStack() },
-                    preselectedAccountId = accountId
+                    preselectedAccountId = accountId,
+                    currency = appPreferences.currency
                 )
             }
 
@@ -222,7 +223,8 @@ fun VaultiMainScreen(
                         transactionViewModel = transactionViewModel,
                         accountViewModel = accountViewModel,
                         onNavigateBack = { navController.popBackStack() },
-                        existingTransaction = transaction
+                        existingTransaction = transaction,
+                        currency = appPreferences.currency
                     )
                 }
             }
@@ -244,7 +246,8 @@ fun VaultiMainScreen(
                         navController.navigate("edit_transaction/${transaction.id}")
                     },
                     hideBalance = balancesHidden,
-                    onToggleBalancesHidden = onToggleBalancesHidden
+                    onToggleBalancesHidden = onToggleBalancesHidden,
+                    currency = appPreferences.currency
                 )
             }
 
