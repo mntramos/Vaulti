@@ -65,7 +65,12 @@ fun SettingsScreen(
     var maxRecentText by remember { mutableStateOf(appPreferences.maxRecentTransactions.toString()) }
     var pageSizeText by remember { mutableStateOf(appPreferences.transactionsPageSize.toString()) }
     var showCurrencyDropdown by remember { mutableStateOf(false) }
-    val currencies = listOf("PHP", "USD", "EUR", "GBP", "JPY", "SGD", "AUD", "CAD")
+    val currencies = listOf(
+        "AED", "ARS", "AUD", "BRL", "CAD", "CHF", "CLP", "CNY", "COP", "CZK",
+        "DKK", "EUR", "GBP", "HKD", "IDR", "ILS", "INR", "JPY", "KRW", "MXN",
+        "MYR", "NOK", "NZD", "PHP", "PLN", "SAR", "SEK", "SGD", "THB", "TRY",
+        "TWD", "USD", "VND", "ZAR"
+    )
 
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
