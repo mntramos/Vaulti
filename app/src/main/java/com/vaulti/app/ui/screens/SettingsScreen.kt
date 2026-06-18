@@ -240,7 +240,7 @@ fun SettingsScreen(
                             onExpandedChange = { showCurrencyDropdown = it }
                         ) {
                             OutlinedTextField(
-                                value = "${appPreferences.currency} (${FormatUtils.currencySymbol(appPreferences.currency)})",
+                                value = "${FormatUtils.currencyName(appPreferences.currency)} (${appPreferences.currency}) ${FormatUtils.currencySymbol(appPreferences.currency)}",
                                 onValueChange = {},
                                 readOnly = true,
                                 label = { Text("Currency") },
@@ -255,7 +255,7 @@ fun SettingsScreen(
                             ) {
                                 currencies.forEach { code ->
                                     DropdownMenuItem(
-                                        text = { Text("$code (${FormatUtils.currencySymbol(code)})") },
+                                        text = { Text("${FormatUtils.currencyName(code)} ($code) ${FormatUtils.currencySymbol(code)}") },
                                         onClick = {
                                             appPreferences.currency = code
                                             showCurrencyDropdown = false
