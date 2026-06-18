@@ -27,6 +27,7 @@ fun TransactionItem(
     modifier: Modifier = Modifier,
     accountName: String = "",
     toAccountName: String = "",
+    currency: String = "PHP",
     onEditClick: () -> Unit = {}
 ) {
     val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
@@ -116,8 +117,9 @@ fun TransactionItem(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
+                val symbol = FormatUtils.currencySymbol(currency)
                 Text(
-                    text = "$prefix₱${FormatUtils.formatAmount(transaction.amount)}",
+                    text = "$prefix$symbol${FormatUtils.formatAmount(transaction.amount)}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = amountColor,

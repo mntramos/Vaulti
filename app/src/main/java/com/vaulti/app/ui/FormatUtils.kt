@@ -20,4 +20,16 @@ object FormatUtils {
         } catch (_: IllegalArgumentException) {
             default
         }
+
+    fun currencySymbol(code: String): String = when (code.uppercase()) {
+        "PHP" -> "₱"
+        "USD" -> "$"
+        "EUR" -> "€"
+        "GBP" -> "£"
+        "JPY" -> "¥"
+        "SGD" -> "S$"
+        "AUD" -> "A$"
+        "CAD" -> "C$"
+        else -> "₱"
+    }
 }

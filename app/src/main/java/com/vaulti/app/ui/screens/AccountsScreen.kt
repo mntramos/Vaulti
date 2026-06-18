@@ -181,7 +181,8 @@ fun AccountsScreen(
                 AccountDetailCard(
                     account = account,
                     onClick = { onAccountClick(account) },
-                    hideBalance = hideBalance
+                    hideBalance = hideBalance,
+                    currency = appPreferences.currency
                 )
             }
 
@@ -195,7 +196,8 @@ fun AccountsScreen(
             onConfirm = { name, type, balance, color, isLiability ->
                 viewModel.addAccount(name, type, balance, color, isLiability)
                 showAddDialog = false
-            }
+            },
+            currency = appPreferences.currency
         )
     }
 }
@@ -204,7 +206,8 @@ fun AccountsScreen(
 private fun AccountDetailCard(
     account: Account,
     onClick: () -> Unit,
-    hideBalance: Boolean = false
+    hideBalance: Boolean = false,
+    currency: String = "PHP"
 ) {
     Card(
         modifier = Modifier
@@ -247,8 +250,9 @@ private fun AccountDetailCard(
                     )
                 }
             }
+            val symbol = FormatUtils.currencySymbol(currency)
             Text(
-                text = if (hideBalance) "₱*****" else "₱${FormatUtils.formatAmount(account.balance)}",
+                text = if (hideBalance) "${symbol}*****" else "$symbol${FormatUtils.formatAmount(account.balance)}",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
@@ -262,7 +266,8 @@ private fun AccountDetailCard(
 @Composable
 private fun AddAccountDialog(
     onDismiss: () -> Unit,
-    onConfirm: (String, AccountType, Double, Long, Boolean) -> Unit
+    onConfirm: (String, AccountType, Double, Long, Boolean) -> Unit,
+    currency: String = "PHP"
 ) {
     var name by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf(AccountType.CASH) }
@@ -286,7 +291,7 @@ private fun AddAccountDialog(
                     value = balance,
                     onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) balance = it },
                     label = { Text(if (isLiability) "Outstanding Debt" else "Initial Balance") },
-                    prefix = { Text("₱") },
+                    prefix = { Text(FormatUtils.currencySymbol(currency)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth()
                 )

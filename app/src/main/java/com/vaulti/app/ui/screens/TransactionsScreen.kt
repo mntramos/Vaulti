@@ -224,12 +224,13 @@ fun TransactionsScreen(
                             containerColor = MaterialTheme.colorScheme.primaryContainer
                         ) else CardDefaults.cardColors()
                     ) {
-                        TransactionItem(
-                            transaction = transaction,
-                            accountName = accountMap[transaction.accountId]?.name ?: "",
-                            toAccountName = if (transaction.toAccountId != null) accountMap[transaction.toAccountId]?.name ?: "" else "",
-                            onEditClick = { onTransactionClick(transaction) }
-                        )
+                    TransactionItem(
+                        transaction = transaction,
+                        accountName = accountMap[transaction.accountId]?.name ?: "",
+                        toAccountName = if (transaction.toAccountId != null) accountMap[transaction.toAccountId]?.name ?: "" else "",
+                        currency = appPreferences.currency,
+                        onEditClick = { onTransactionClick(transaction) }
+                    )
                     }
                 }
 
