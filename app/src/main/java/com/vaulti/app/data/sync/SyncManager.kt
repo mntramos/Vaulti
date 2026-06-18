@@ -1,6 +1,8 @@
 package com.vaulti.app.data.sync
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.firestore.DocumentChange
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
@@ -47,13 +49,13 @@ class SyncManager @Inject constructor(
         val ref = accountsRef() ?: return
         val currentUid = uid ?: return
         scope.launch {
-            try { ref.document(account.id.toString()).set(account.toSecureMap(cryptoManager, currentUid)) } catch (_: Exception) {}
+            try { ref.document(account.id.toString()).set(account.toSecureMap(cryptoManager, currentUid)) } catch (e: Exception) { Log.e("SyncManager", "pushAccount failed", e) }
         }
     }
 
     fun deleteAccount(id: Long) {
         scope.launch {
-            try { accountsRef()?.document(id.toString())?.delete() } catch (_: Exception) {}
+            try { accountsRef()?.document(id.toString())?.delete() } catch (e: Exception) { Log.e("SyncManager", "deleteAccount failed", e) }
         }
     }
 
@@ -61,13 +63,13 @@ class SyncManager @Inject constructor(
         val ref = transactionsRef() ?: return
         val currentUid = uid ?: return
         scope.launch {
-            try { ref.document(transaction.id.toString()).set(transaction.toSecureMap(cryptoManager, currentUid)) } catch (_: Exception) {}
+            try { ref.document(transaction.id.toString()).set(transaction.toSecureMap(cryptoManager, currentUid)) } catch (e: Exception) { Log.e("SyncManager", "pushTransaction failed", e) }
         }
     }
 
     fun deleteTransaction(id: Long) {
         scope.launch {
-            try { transactionsRef()?.document(id.toString())?.delete() } catch (_: Exception) {}
+            try { transactionsRef()?.document(id.toString())?.delete() } catch (e: Exception) { Log.e("SyncManager", "deleteTransaction failed", e) }
         }
     }
 
@@ -75,13 +77,13 @@ class SyncManager @Inject constructor(
         val ref = budgetsRef() ?: return
         val currentUid = uid ?: return
         scope.launch {
-            try { ref.document(budget.id.toString()).set(budget.toSecureMap(cryptoManager, currentUid)) } catch (_: Exception) {}
+            try { ref.document(budget.id.toString()).set(budget.toSecureMap(cryptoManager, currentUid)) } catch (e: Exception) { Log.e("SyncManager", "pushBudget failed", e) }
         }
     }
 
     fun deleteBudget(id: Long) {
         scope.launch {
-            try { budgetsRef()?.document(id.toString())?.delete() } catch (_: Exception) {}
+            try { budgetsRef()?.document(id.toString())?.delete() } catch (e: Exception) { Log.e("SyncManager", "deleteBudget failed", e) }
         }
     }
 
@@ -89,13 +91,13 @@ class SyncManager @Inject constructor(
         val ref = goalsRef() ?: return
         val currentUid = uid ?: return
         scope.launch {
-            try { ref.document(goal.id.toString()).set(goal.toSecureMap(cryptoManager, currentUid)) } catch (_: Exception) {}
+            try { ref.document(goal.id.toString()).set(goal.toSecureMap(cryptoManager, currentUid)) } catch (e: Exception) { Log.e("SyncManager", "pushGoal failed", e) }
         }
     }
 
     fun deleteGoal(id: Long) {
         scope.launch {
-            try { goalsRef()?.document(id.toString())?.delete() } catch (_: Exception) {}
+            try { goalsRef()?.document(id.toString())?.delete() } catch (e: Exception) { Log.e("SyncManager", "deleteGoal failed", e) }
         }
     }
 
@@ -103,13 +105,13 @@ class SyncManager @Inject constructor(
         val ref = categoriesRef() ?: return
         val currentUid = uid ?: return
         scope.launch {
-            try { ref.document(category.id.toString()).set(category.toSecureMap(cryptoManager, currentUid)) } catch (_: Exception) {}
+            try { ref.document(category.id.toString()).set(category.toSecureMap(cryptoManager, currentUid)) } catch (e: Exception) { Log.e("SyncManager", "pushCategory failed", e) }
         }
     }
 
     fun deleteCategory(id: Long) {
         scope.launch {
-            try { categoriesRef()?.document(id.toString())?.delete() } catch (_: Exception) {}
+            try { categoriesRef()?.document(id.toString())?.delete() } catch (e: Exception) { Log.e("SyncManager", "deleteCategory failed", e) }
         }
     }
 
@@ -125,8 +127,13 @@ class SyncManager @Inject constructor(
             }
             try {
                 baseRef.collection("_crypto").document("key").delete()
-            } catch (_: Exception) {}
-        } catch (_: Exception) {}
+            } catch (e: Exception) {
+                Log.e("SyncManager", "deleteAll: failed to delete _crypto key", e)
+            }
+        } catch (e: Exception) {
+            Log.e("SyncManager", "deleteAll failed", e)
+            FirebaseCrashlytics.getInstance().recordException(e)
+        }
     }
 
     suspend fun pullAll() = withContext(Dispatchers.IO) {
@@ -152,42 +159,61 @@ class SyncManager @Inject constructor(
                     accountDao.insert(account)
                 }
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            Log.e("SyncManager", "pullAll: accounts failed", e)
+            FirebaseCrashlytics.getInstance().recordException(e)
+        }
 
         try {
             val transactionSnapshot = baseRef.collection("transactions").get().await()
             for (doc in transactionSnapshot.documents) {
                 doc.data?.toTransaction(cryptoManager, currentUid)?.let { transactionDao.insert(it) }
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            Log.e("SyncManager", "pullAll: transactions failed", e)
+            FirebaseCrashlytics.getInstance().recordException(e)
+        }
 
         try {
             val budgetSnapshot = baseRef.collection("budgets").get().await()
             for (doc in budgetSnapshot.documents) {
                 doc.data?.toBudget(cryptoManager, currentUid)?.let { budgetDao.insert(it) }
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            Log.e("SyncManager", "pullAll: budgets failed", e)
+            FirebaseCrashlytics.getInstance().recordException(e)
+        }
 
         try {
             val goalSnapshot = baseRef.collection("goals").get().await()
             for (doc in goalSnapshot.documents) {
                 doc.data?.toGoal(cryptoManager, currentUid)?.let { goalDao.insert(it) }
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            Log.e("SyncManager", "pullAll: goals failed", e)
+            FirebaseCrashlytics.getInstance().recordException(e)
+        }
 
         try {
             val categorySnapshot = baseRef.collection("categories").get().await()
             for (doc in categorySnapshot.documents) {
                 doc.data?.toCategory(cryptoManager, currentUid)?.let { categoryDao.insert(it) }
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            Log.e("SyncManager", "pullAll: categories failed", e)
+            FirebaseCrashlytics.getInstance().recordException(e)
+        }
     }
 
     fun startListening() {
         val currentUid = uid ?: return
         val baseRef = firestore.collection("users").document(currentUid)
 
-        val accountReg = baseRef.collection("accounts").addSnapshotListener { snapshot, _ ->
+        val accountReg = baseRef.collection("accounts").addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.e("SyncManager", "accounts snapshot listener error", error)
+                return@addSnapshotListener
+            }
             snapshot?.documentChanges?.forEach { change ->
                 if (change.type == DocumentChange.Type.REMOVED) return@forEach
                 val account = change.document.data.toAccount(cryptoManager, currentUid) ?: return@forEach
@@ -203,7 +229,11 @@ class SyncManager @Inject constructor(
         }
         listeners.add(accountReg)
 
-        val transactionReg = baseRef.collection("transactions").addSnapshotListener { snapshot, _ ->
+        val transactionReg = baseRef.collection("transactions").addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.e("SyncManager", "transactions snapshot listener error", error)
+                return@addSnapshotListener
+            }
             snapshot?.documentChanges?.forEach { change ->
                 if (change.type == DocumentChange.Type.REMOVED) return@forEach
                 val transaction = change.document.data.toTransaction(cryptoManager, currentUid) ?: return@forEach
@@ -212,7 +242,11 @@ class SyncManager @Inject constructor(
         }
         listeners.add(transactionReg)
 
-        val budgetReg = baseRef.collection("budgets").addSnapshotListener { snapshot, _ ->
+        val budgetReg = baseRef.collection("budgets").addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.e("SyncManager", "budgets snapshot listener error", error)
+                return@addSnapshotListener
+            }
             snapshot?.documentChanges?.forEach { change ->
                 if (change.type == DocumentChange.Type.REMOVED) return@forEach
                 val budget = change.document.data.toBudget(cryptoManager, currentUid) ?: return@forEach
@@ -221,7 +255,11 @@ class SyncManager @Inject constructor(
         }
         listeners.add(budgetReg)
 
-        val goalReg = baseRef.collection("goals").addSnapshotListener { snapshot, _ ->
+        val goalReg = baseRef.collection("goals").addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.e("SyncManager", "goals snapshot listener error", error)
+                return@addSnapshotListener
+            }
             snapshot?.documentChanges?.forEach { change ->
                 if (change.type == DocumentChange.Type.REMOVED) return@forEach
                 val goal = change.document.data.toGoal(cryptoManager, currentUid) ?: return@forEach
@@ -230,7 +268,11 @@ class SyncManager @Inject constructor(
         }
         listeners.add(goalReg)
 
-        val categoryReg = baseRef.collection("categories").addSnapshotListener { snapshot, _ ->
+        val categoryReg = baseRef.collection("categories").addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                Log.e("SyncManager", "categories snapshot listener error", error)
+                return@addSnapshotListener
+            }
             snapshot?.documentChanges?.forEach { change ->
                 if (change.type == DocumentChange.Type.REMOVED) return@forEach
                 val category = change.document.data.toCategory(cryptoManager, currentUid) ?: return@forEach
