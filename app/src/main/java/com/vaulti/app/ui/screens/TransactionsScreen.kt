@@ -9,8 +9,10 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,10 +33,11 @@ fun TransactionsScreen(
     onAddTransaction: () -> Unit,
     onTransactionClick: (Transaction) -> Unit
 ) {
-    val allTransactions by viewModel.transactions.collectAsState()
+    val allTransactions by viewModel.filteredTransactions.collectAsState()
     val accounts by viewModel.accounts.collectAsState()
     val accountMap = remember(accounts) { accounts.associateBy { it.id } }
 
+    var searchText by remember { mutableStateOf("") }
     var selectedFilterType by remember { mutableStateOf<TransactionType?>(null) }
     var sortOrder by remember { mutableStateOf(FormatUtils.safeValueOf(appPreferences.transactionsSort, SortOrder.DATE_DESC)) }
     var showSortMenu by remember { mutableStateOf(false) }
@@ -43,6 +46,10 @@ fun TransactionsScreen(
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     val pageSize = appPreferences.transactionsPageSize
+
+    LaunchedEffect(searchText) {
+        viewModel.setSearchQuery(searchText)
+    }
 
     val transactions = remember(allTransactions, selectedFilterType, sortOrder) {
         val filtered = if (selectedFilterType != null) {
@@ -174,6 +181,25 @@ fun TransactionsScreen(
                         }
                     }
                     Spacer(modifier = Modifier.height(4.dp))
+                }
+
+                item {
+                    OutlinedTextField(
+                        value = searchText,
+                        onValueChange = { searchText = it },
+                        placeholder = { Text("Search transactions...") },
+                        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                        trailingIcon = {
+                            if (searchText.isNotEmpty()) {
+                                IconButton(onClick = { searchText = "" }) {
+                                    Icon(Icons.Filled.Clear, contentDescription = "Clear search")
+                                }
+                            }
+                        },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
 
                 item {
