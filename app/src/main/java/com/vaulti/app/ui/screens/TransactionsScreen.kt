@@ -84,7 +84,7 @@ fun TransactionsScreen(
         },
         modifier = Modifier.padding(bottom = 80.dp)
     ) { padding ->
-        if (allTransactions.isEmpty()) {
+        if (accounts.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -92,31 +92,38 @@ fun TransactionsScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    if (accounts.isEmpty()) {
-                        Text(
-                            text = "No accounts yet",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Add an account in the Accounts tab first",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    } else {
-                        Text(
-                            text = "No transactions yet",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Tap + to add your first transaction",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Text(
+                        text = "No accounts yet",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Add an account in the Accounts tab first",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        } else if (allTransactions.isEmpty() && searchText.isBlank()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "No transactions yet",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Tap + to add your first transaction",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         } else {
@@ -226,36 +233,53 @@ fun TransactionsScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                items(visibleTransactions) { transaction ->
-                    val isSelected = transaction.id in selectedIds
-                    @OptIn(ExperimentalFoundationApi::class)
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .combinedClickable(
-                                onClick = {
-                                    if (selectedIds.isNotEmpty()) {
-                                        selectedIds = if (isSelected) selectedIds - transaction.id else selectedIds + transaction.id
+                if (visibleTransactions.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No transactions matching \"$searchText\"",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                } else {
+                    items(visibleTransactions) { transaction ->
+                        val isSelected = transaction.id in selectedIds
+                        @OptIn(ExperimentalFoundationApi::class)
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .combinedClickable(
+                                    onClick = {
+                                        if (selectedIds.isNotEmpty()) {
+                                            selectedIds = if (isSelected) selectedIds - transaction.id else selectedIds + transaction.id
+                                        }
+                                    },
+                                    onLongClick = {
+                                        if (selectedIds.isEmpty()) {
+                                            selectedIds = setOf(transaction.id)
+                                        } else {
+                                            selectedIds = if (isSelected) selectedIds - transaction.id else selectedIds + transaction.id
+                                        }
                                     }
-                                },
-                                onLongClick = {
-                                    if (selectedIds.isEmpty()) {
-                                        selectedIds = setOf(transaction.id)
-                                    } else {
-                                        selectedIds = if (isSelected) selectedIds - transaction.id else selectedIds + transaction.id
-                                    }
-                                }
-                            ),
-                        colors = if (isSelected) CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        ) else CardDefaults.cardColors()
-                    ) {
-                        TransactionItem(
-                            transaction = transaction,
-                            accountName = accountMap[transaction.accountId]?.name ?: "",
-                            toAccountName = if (transaction.toAccountId != null) accountMap[transaction.toAccountId]?.name ?: "" else "",
-                            onEditClick = { onTransactionClick(transaction) }
-                        )
+                                ),
+                            colors = if (isSelected) CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                            ) else CardDefaults.cardColors()
+                        ) {
+                            TransactionItem(
+                                transaction = transaction,
+                                accountName = accountMap[transaction.accountId]?.name ?: "",
+                                toAccountName = if (transaction.toAccountId != null) accountMap[transaction.toAccountId]?.name ?: "" else "",
+                                onEditClick = { onTransactionClick(transaction) }
+                            )
+                        }
                     }
                 }
 
