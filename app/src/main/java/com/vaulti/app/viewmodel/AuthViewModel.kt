@@ -7,6 +7,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.GoogleAuthProvider
+import com.vaulti.app.data.crypto.CryptoManager
 import com.vaulti.app.data.database.VaultiDatabase
 import com.vaulti.app.data.sync.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,7 +22,8 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val database: VaultiDatabase,
-    private val syncManager: SyncManager
+    private val syncManager: SyncManager,
+    private val cryptoManager: CryptoManager
 ) : ViewModel() {
 
     val isLoggedIn: StateFlow<Boolean> = callbackFlow {
@@ -49,8 +51,6 @@ class AuthViewModel @Inject constructor(
                     firebaseAuth.signOut()
                     _authResult.emit(Result.failure(EmailNotVerifiedException()))
                 } else {
-                    syncManager.pullAll()
-                    syncManager.startListening()
                     _authResult.emit(Result.success(Unit))
                 }
             } catch (e: FirebaseAuthInvalidUserException) {
@@ -85,13 +85,18 @@ class AuthViewModel @Inject constructor(
             try {
                 val credential = GoogleAuthProvider.getCredential(idToken, null)
                 firebaseAuth.signInWithCredential(credential).await()
-                syncManager.pullAll()
-                syncManager.startListening()
                 _authResult.emit(Result.success(Unit))
             } catch (e: Exception) {
                 Log.e(TAG, "Google sign-in failed", e)
                 _authResult.emit(Result.failure(e))
             }
+        }
+    }
+
+    fun startSync() {
+        viewModelScope.launch {
+            syncManager.pullAll()
+            syncManager.startListening()
         }
     }
 
@@ -103,6 +108,7 @@ class AuthViewModel @Inject constructor(
 
     fun logout() {
         viewModelScope.launch {
+            cryptoManager.clearKey()
             syncManager.stopListening()
             firebaseAuth.signOut()
         }

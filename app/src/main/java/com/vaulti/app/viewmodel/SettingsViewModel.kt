@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.vaulti.app.data.crypto.CryptoManager
 import com.vaulti.app.data.database.VaultiDatabase
 import com.vaulti.app.data.database.entity.AccountType
 import com.vaulti.app.data.database.entity.BudgetPeriod
@@ -38,6 +39,7 @@ class SettingsViewModel @Inject constructor(
     private val categoryRepository: CategoryRepository,
     private val syncManager: SyncManager,
     private val firebaseAuth: FirebaseAuth,
+    private val cryptoManager: CryptoManager,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -233,6 +235,8 @@ class SettingsViewModel @Inject constructor(
 
     fun deleteAllData() {
         viewModelScope.launch {
+            cryptoManager.removeDeviceKey()
+            cryptoManager.clearKey()
             syncManager.deleteAll()
             syncManager.stopListening()
             withContext(Dispatchers.IO) {

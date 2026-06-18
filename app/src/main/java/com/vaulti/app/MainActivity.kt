@@ -23,8 +23,10 @@ import androidx.navigation.navArgument
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.vaulti.app.data.crypto.CryptoManager
 import com.vaulti.app.ui.components.VaultiBottomNavBar
 import com.vaulti.app.ui.screens.*
+import com.vaulti.app.viewmodel.CryptoViewModel
 import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.ui.theme.ThemeMode
 import com.vaulti.app.ui.theme.VaultiTheme
@@ -35,6 +37,7 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject lateinit var appPreferences: AppPreferences
+    @Inject lateinit var cryptoManager: CryptoManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +49,7 @@ class MainActivity : ComponentActivity() {
             VaultiTheme(themeMode = themeMode) {
                 VaultiMainScreen(
                     appPreferences = appPreferences,
+                    cryptoManager = cryptoManager,
                     themeMode = themeMode,
                     onThemeChanged = { newMode ->
                         themeMode = newMode
@@ -60,6 +64,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun VaultiMainScreen(
     appPreferences: AppPreferences,
+    cryptoManager: CryptoManager,
     themeMode: ThemeMode,
     onThemeChanged: (ThemeMode) -> Unit
 ) {
@@ -85,11 +90,14 @@ fun VaultiMainScreen(
     val budgetViewModel: BudgetViewModel = hiltViewModel()
     val goalViewModel: GoalViewModel = hiltViewModel()
 
-    val startDestination = if (isLoggedIn) "dashboard" else "login"
+    val startDestination = if (isLoggedIn) {
+        if (cryptoManager.isInitialized) "dashboard" else "pin"
+    } else "login"
 
     LaunchedEffect(isLoggedIn) {
-        if (isLoggedIn && navController.currentDestination?.route != "dashboard") {
-            navController.navigate("dashboard") {
+        if (isLoggedIn && navController.currentDestination?.route != "pin" && navController.currentDestination?.route != "dashboard") {
+            val dest = if (cryptoManager.isInitialized) "dashboard" else "pin"
+            navController.navigate(dest) {
                 popUpTo(0) { inclusive = true }
             }
         }
@@ -140,6 +148,19 @@ fun VaultiMainScreen(
                 RegisterScreen(
                     viewModel = authViewModel,
                     onNavigateToLogin = { navController.popBackStack() }
+                )
+            }
+
+            composable("pin") {
+                val cryptoViewModel: CryptoViewModel = hiltViewModel()
+                PinScreen(
+                    cryptoViewModel = cryptoViewModel,
+                    onComplete = {
+                        authViewModel.startSync()
+                        navController.navigate("dashboard") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
                 )
             }
 
