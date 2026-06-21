@@ -22,8 +22,8 @@ android {
         applicationId = "com.vaulti.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = getSemverVersionCode("0.1.0")
-        versionName = "0.1.0"
+        versionCode = getSemverVersionCode("0.1.1")
+        versionName = "0.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
