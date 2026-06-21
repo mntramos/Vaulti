@@ -1,6 +1,7 @@
 package com.vaulti.app.data.database
 
 import android.content.Context
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.vaulti.app.data.database.dao.AccountDao
 import com.vaulti.app.data.database.dao.BudgetDao
@@ -68,6 +69,6 @@ object DatabaseModule {
         CategoryRepository(dao, syncManager)
 
     @Provides @Singleton
-    fun provideAppPreferences(@ApplicationContext context: Context): AppPreferences =
-        AppPreferences(context)
+    fun provideAppPreferences(@ApplicationContext context: Context, firebaseAuth: FirebaseAuth): AppPreferences =
+        AppPreferences(context, firebaseAuth)
 }

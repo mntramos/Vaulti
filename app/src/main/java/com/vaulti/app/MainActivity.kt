@@ -24,6 +24,7 @@ import androidx.navigation.navArgument
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.FirebaseAuth
 import com.vaulti.app.data.crypto.CryptoManager
 import com.vaulti.app.ui.components.VaultiBottomNavBar
 import com.vaulti.app.ui.screens.*
@@ -39,6 +40,7 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject lateinit var appPreferences: AppPreferences
     @Inject lateinit var cryptoManager: CryptoManager
+    @Inject lateinit var firebaseAuth: FirebaseAuth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -46,7 +48,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            var themeMode by remember { mutableStateOf(appPreferences.themeMode) }
+            var currentUid by remember { mutableStateOf(firebaseAuth.currentUser?.uid) }
+            DisposableEffect(firebaseAuth) {
+                val listener = FirebaseAuth.AuthStateListener { auth ->
+                    currentUid = auth.currentUser?.uid
+                }
+                firebaseAuth.addAuthStateListener(listener)
+                onDispose { firebaseAuth.removeAuthStateListener(listener) }
+            }
+            var themeMode by remember(currentUid) { mutableStateOf(appPreferences.themeMode) }
 
             VaultiTheme(themeMode = themeMode) {
                 VaultiMainScreen(
