@@ -38,7 +38,8 @@ fun AccountDetailScreen(
     onAddTransaction: (Long) -> Unit,
     onTransactionClick: (Transaction) -> Unit,
     hideBalance: Boolean = false,
-    onToggleBalancesHidden: () -> Unit = {}
+    onToggleBalancesHidden: () -> Unit = {},
+    currency: String = "PHP"
 ) {
     val accounts by accountViewModel.accounts.collectAsState()
     val allTransactions by transactionViewModel.transactions.collectAsState()
@@ -165,8 +166,9 @@ fun AccountDetailScreen(
                                 }
                             }
                             Spacer(modifier = Modifier.height(4.dp))
+                            val symbol = FormatUtils.currencySymbol(currency)
                             Text(
-                                text = if (hideBalance) "₱*****" else "₱${FormatUtils.formatAmount(account.balance)}",
+                                text = if (hideBalance) "${symbol}*****" else "$symbol${FormatUtils.formatAmount(account.balance)}",
                                 style = MaterialTheme.typography.headlineLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -264,6 +266,7 @@ fun AccountDetailScreen(
                     transaction = transaction,
                     accountName = accountMap[transaction.accountId]?.name ?: "",
                     toAccountName = if (transaction.toAccountId != null) accountMap[transaction.toAccountId]?.name ?: "" else "",
+                    currency = currency,
                     onEditClick = { onTransactionClick(transaction) }
                 )
             }

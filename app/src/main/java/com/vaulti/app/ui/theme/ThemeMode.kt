@@ -54,4 +54,8 @@ class AppPreferences(context: Context) {
     var hasSeenTutorial: Boolean
         get() = prefs.getBoolean("has_seen_tutorial", false)
         set(value) = prefs.edit { putBoolean("has_seen_tutorial", value) }
+
+    var currency: String
+        get() = prefs.getString("currency", "PHP") ?: "PHP"
+        set(value) = prefs.edit { putString("currency", value) }
 }

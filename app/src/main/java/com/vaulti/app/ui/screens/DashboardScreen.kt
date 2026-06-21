@@ -83,7 +83,8 @@ fun DashboardScreen(
         allTransactions.take(maxRecent)
     }
 
-    fun formatAmount(amount: Double): String = if (balancesHidden) "₱*****" else "₱${FormatUtils.formatAmount(amount)}"
+    val currencySymbol = FormatUtils.currencySymbol(appPreferences.currency)
+    fun formatAmount(amount: Double): String = if (balancesHidden) "${currencySymbol}*****" else "$currencySymbol${FormatUtils.formatAmount(amount)}"
 
     Scaffold(
         floatingActionButton = {
@@ -326,7 +327,8 @@ fun DashboardScreen(
                                 AccountCard(
                                     account = account,
                                     modifier = Modifier.clickable { onAccountClick(account) },
-                                    hideBalance = balancesHidden
+                                    hideBalance = balancesHidden,
+                                    currency = appPreferences.currency
                                 )
                             }
                         }
@@ -412,6 +414,7 @@ fun DashboardScreen(
                         transaction = transaction,
                         accountName = accountMap[transaction.accountId]?.name ?: "",
                         toAccountName = if (transaction.toAccountId != null) accountMap[transaction.toAccountId]?.name ?: "" else "",
+                        currency = appPreferences.currency,
                         onEditClick = { onTransactionClick(transaction) }
                     )
                 }
