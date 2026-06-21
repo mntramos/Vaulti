@@ -10,8 +10,10 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
@@ -35,10 +37,11 @@ fun TransactionsScreen(
     onAddTransaction: () -> Unit,
     onTransactionClick: (Transaction) -> Unit
 ) {
-    val allTransactions by viewModel.transactions.collectAsState()
+    val allTransactions by viewModel.filteredTransactions.collectAsState()
     val accounts by viewModel.accounts.collectAsState()
     val accountMap = remember(accounts) { accounts.associateBy { it.id } }
 
+    var searchText by remember { mutableStateOf("") }
     var selectedFilterType by remember { mutableStateOf<TransactionType?>(null) }
     var sortOrder by remember { mutableStateOf(FormatUtils.safeValueOf(appPreferences.transactionsSort, SortOrder.DATE_DESC)) }
     var showSortMenu by remember { mutableStateOf(false) }
@@ -47,6 +50,10 @@ fun TransactionsScreen(
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     val pageSize = appPreferences.transactionsPageSize
+
+    LaunchedEffect(searchText) {
+        viewModel.setSearchQuery(searchText)
+    }
 
     val transactions = remember(allTransactions, selectedFilterType, sortOrder) {
         val filtered = if (selectedFilterType != null) {
@@ -81,7 +88,7 @@ fun TransactionsScreen(
         },
         modifier = Modifier.padding(bottom = 80.dp)
     ) { padding ->
-        if (allTransactions.isEmpty()) {
+        if (accounts.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -89,31 +96,38 @@ fun TransactionsScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    if (accounts.isEmpty()) {
-                        Text(
-                            text = "No accounts yet",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Add an account in the Accounts tab first",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    } else {
-                        Text(
-                            text = "No transactions yet",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Tap + to add your first transaction",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Text(
+                        text = "No accounts yet",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Add an account in the Accounts tab first",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        } else if (allTransactions.isEmpty() && searchText.isBlank()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "No transactions yet",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Tap + to add your first transaction",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         } else {
@@ -189,6 +203,25 @@ fun TransactionsScreen(
                 }
 
                 item {
+                    OutlinedTextField(
+                        value = searchText,
+                        onValueChange = { searchText = it },
+                        placeholder = { Text("Search transactions...") },
+                        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
+                        trailingIcon = {
+                            if (searchText.isNotEmpty()) {
+                                IconButton(onClick = { searchText = "" }) {
+                                    Icon(Icons.Filled.Clear, contentDescription = "Clear search")
+                                }
+                            }
+                        },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -212,36 +245,53 @@ fun TransactionsScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                items(visibleTransactions) { transaction ->
-                    val isSelected = transaction.id in selectedIds
-                    @OptIn(ExperimentalFoundationApi::class)
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .combinedClickable(
-                                onClick = {
-                                    if (selectedIds.isNotEmpty()) {
-                                        selectedIds = if (isSelected) selectedIds - transaction.id else selectedIds + transaction.id
+                if (visibleTransactions.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No transactions matching \"$searchText\"",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                } else {
+                    items(visibleTransactions) { transaction ->
+                        val isSelected = transaction.id in selectedIds
+                        @OptIn(ExperimentalFoundationApi::class)
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .combinedClickable(
+                                    onClick = {
+                                        if (selectedIds.isNotEmpty()) {
+                                            selectedIds = if (isSelected) selectedIds - transaction.id else selectedIds + transaction.id
+                                        }
+                                    },
+                                    onLongClick = {
+                                        if (selectedIds.isEmpty()) {
+                                            selectedIds = setOf(transaction.id)
+                                        } else {
+                                            selectedIds = if (isSelected) selectedIds - transaction.id else selectedIds + transaction.id
+                                        }
                                     }
-                                },
-                                onLongClick = {
-                                    if (selectedIds.isEmpty()) {
-                                        selectedIds = setOf(transaction.id)
-                                    } else {
-                                        selectedIds = if (isSelected) selectedIds - transaction.id else selectedIds + transaction.id
-                                    }
-                                }
-                            ),
-                        colors = if (isSelected) CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        ) else CardDefaults.cardColors()
-                    ) {
-                        TransactionItem(
-                            transaction = transaction,
-                            accountName = accountMap[transaction.accountId]?.name ?: "",
-                            toAccountName = if (transaction.toAccountId != null) accountMap[transaction.toAccountId]?.name ?: "" else "",
-                            onEditClick = { onTransactionClick(transaction) }
-                        )
+                                ),
+                            colors = if (isSelected) CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer
+                            ) else CardDefaults.cardColors()
+                        ) {
+                            TransactionItem(
+                                transaction = transaction,
+                                accountName = accountMap[transaction.accountId]?.name ?: "",
+                                toAccountName = if (transaction.toAccountId != null) accountMap[transaction.toAccountId]?.name ?: "" else "",
+                                onEditClick = { onTransactionClick(transaction) }
+                            )
+                        }
                     }
                 }
 
