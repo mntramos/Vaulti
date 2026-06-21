@@ -16,6 +16,7 @@ import com.vaulti.app.data.sync.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -52,6 +53,24 @@ class TransactionViewModel @Inject constructor(
 
     val categories: StateFlow<List<Category>> = categoryRepository.getAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    val filteredTransactions: StateFlow<List<Transaction>> = combine(
+        transactions, _searchQuery
+    ) { all, query ->
+        if (query.isBlank()) all
+        else all.filter { tx ->
+            tx.note.contains(query, ignoreCase = true) ||
+            tx.category.contains(query, ignoreCase = true) ||
+            tx.amount.toString().contains(query, ignoreCase = true)
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
 
     init {
         viewModelScope.launch {
