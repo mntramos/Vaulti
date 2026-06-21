@@ -12,6 +12,7 @@ import com.vaulti.app.data.repository.AccountRepository
 import com.vaulti.app.data.repository.BudgetRepository
 import com.vaulti.app.data.repository.CategoryRepository
 import com.vaulti.app.data.repository.TransactionRepository
+import com.vaulti.app.data.sync.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -23,8 +24,22 @@ class TransactionViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val accountRepository: AccountRepository,
     private val budgetRepository: BudgetRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val syncManager: SyncManager
 ) : ViewModel() {
+
+    private val _isRefreshing = MutableStateFlow(false)
+    val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    fun refresh() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            try {
+                syncManager.pullAll()
+            } catch (_: Exception) {}
+            _isRefreshing.value = false
+        }
+    }
 
     val transactions: StateFlow<List<Transaction>> = transactionRepository.getAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
