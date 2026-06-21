@@ -201,7 +201,8 @@ fun GoalsScreen(
                     onEdit = { showEditDialog = goal },
                     onDelete = { showDeleteConfirm = goal },
                     onContribute = { showContributeDialog = goal },
-                    onComplete = { viewModel.completeGoal(goal.id) }
+                    onComplete = { viewModel.completeGoal(goal.id) },
+                    currency = appPreferences.currency
                 )
             }
 
@@ -215,7 +216,8 @@ fun GoalsScreen(
             onConfirm = { name, targetAmount, targetDate, color ->
                 viewModel.addGoal(name, targetAmount, targetDate, color)
                 showAddDialog = false
-            }
+            },
+            currency = appPreferences.currency
         )
     }
 
@@ -226,7 +228,8 @@ fun GoalsScreen(
             onConfirm = { name, targetAmount, targetDate, color ->
                 viewModel.updateGoal(goal, name, targetAmount, targetDate, color)
                 showEditDialog = null
-            }
+            },
+            currency = appPreferences.currency
         )
     }
 
@@ -241,7 +244,7 @@ fun GoalsScreen(
                     value = contributeAmount,
                     onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) contributeAmount = it },
                     label = { Text("Amount") },
-                    prefix = { Text("₱") },
+                    prefix = { Text(FormatUtils.currencySymbol(appPreferences.currency)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -298,7 +301,8 @@ private fun GoalCard(
     onEdit: (Goal) -> Unit = {},
     onDelete: (Goal) -> Unit = {},
     onContribute: (Goal) -> Unit = {},
-    onComplete: () -> Unit = {}
+    onComplete: () -> Unit = {},
+    currency: String = "PHP"
 ) {
     val progress = if (goal.targetAmount > 0) (goal.currentAmount / goal.targetAmount).toFloat().coerceIn(0f, 1f) else 0f
     val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
@@ -358,18 +362,19 @@ private fun GoalCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            val gSymbol = FormatUtils.currencySymbol(currency)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "₱${FormatUtils.formatAmount(goal.currentAmount)}",
+                    text = "$gSymbol${FormatUtils.formatAmount(goal.currentAmount)}",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color(goal.color)
                 )
                 Text(
-                    text = "₱${FormatUtils.formatAmount(goal.targetAmount)}",
+                    text = "$gSymbol${FormatUtils.formatAmount(goal.targetAmount)}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -424,7 +429,8 @@ private fun GoalCard(
 private fun AddGoalDialog(
     initial: Goal? = null,
     onDismiss: () -> Unit,
-    onConfirm: (String, Double, Long?, Long) -> Unit
+    onConfirm: (String, Double, Long?, Long) -> Unit,
+    currency: String = "PHP"
 ) {
     var name by remember { mutableStateOf(initial?.name ?: "") }
     var targetAmount by remember { mutableStateOf(if (initial != null) FormatUtils.formatAmountForEdit(initial.targetAmount) else "") }
@@ -450,7 +456,7 @@ private fun AddGoalDialog(
                     value = targetAmount,
                     onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) targetAmount = it },
                     label = { Text("Target Amount") },
-                    prefix = { Text("₱") },
+                    prefix = { Text(FormatUtils.currencySymbol(currency)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     modifier = Modifier.fillMaxWidth()
                 )

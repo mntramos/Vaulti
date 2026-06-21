@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
+import com.vaulti.app.ui.FormatUtils
 import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.ui.theme.ThemeMode
 import com.vaulti.app.viewmodel.SettingsViewModel
@@ -63,6 +64,13 @@ fun SettingsScreen(
     var maxAccountsText by remember { mutableStateOf(appPreferences.maxVisibleAccounts.toString()) }
     var maxRecentText by remember { mutableStateOf(appPreferences.maxRecentTransactions.toString()) }
     var pageSizeText by remember { mutableStateOf(appPreferences.transactionsPageSize.toString()) }
+    var showCurrencyDropdown by remember { mutableStateOf(false) }
+    val currencies = listOf(
+        "AED", "ARS", "AUD", "BRL", "CAD", "CHF", "CLP", "CNY", "COP", "CZK",
+        "DKK", "EUR", "GBP", "HKD", "IDR", "ILS", "INR", "JPY", "KRW", "MXN",
+        "MYR", "NOK", "NZD", "PHP", "PLN", "SAR", "SEK", "SGD", "THB", "TRY",
+        "TWD", "USD", "VND", "ZAR"
+    )
 
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -225,6 +233,36 @@ fun SettingsScreen(
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 singleLine = true
                             )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        ExposedDropdownMenuBox(
+                            expanded = showCurrencyDropdown,
+                            onExpandedChange = { showCurrencyDropdown = it }
+                        ) {
+                            OutlinedTextField(
+                                value = "${FormatUtils.currencyName(appPreferences.currency)} (${appPreferences.currency}) ${FormatUtils.currencySymbol(appPreferences.currency)}",
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Currency") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCurrencyDropdown) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = showCurrencyDropdown,
+                                onDismissRequest = { showCurrencyDropdown = false }
+                            ) {
+                                currencies.forEach { code ->
+                                    DropdownMenuItem(
+                                        text = { Text("${FormatUtils.currencyName(code)} ($code) ${FormatUtils.currencySymbol(code)}") },
+                                        onClick = {
+                                            appPreferences.currency = code
+                                            showCurrencyDropdown = false
+                                        }
+                                    )
+                                }
+                            }
                         }
                     }
                 }

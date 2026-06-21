@@ -30,7 +30,8 @@ fun AddTransactionScreen(
     accountViewModel: AccountViewModel,
     onNavigateBack: () -> Unit,
     existingTransaction: Transaction? = null,
-    preselectedAccountId: Long = -1L
+    preselectedAccountId: Long = -1L,
+    currency: String = "PHP"
 ) {
     val accounts by accountViewModel.accounts.collectAsState()
     val budgets by transactionViewModel.budgets.collectAsState()
@@ -154,8 +155,9 @@ fun AddTransactionScreen(
                     onDismissRequest = { showAccountDropdown = false }
                 ) {
                     accounts.sortedBy { it.name.lowercase() }.forEach { account ->
+                        val sym = FormatUtils.currencySymbol(currency)
                         DropdownMenuItem(
-                            text = { Text("${account.name} (₱${FormatUtils.formatAmount(account.balance)})") },
+                            text = { Text("${account.name} ($sym${FormatUtils.formatAmount(account.balance)})") },
                             onClick = {
                                 selectedAccount = account
                                 showAccountDropdown = false
@@ -185,8 +187,9 @@ fun AddTransactionScreen(
                         onDismissRequest = { showToAccountDropdown = false }
                     ) {
                         filteredAccounts.sortedBy { it.name.lowercase() }.forEach { account ->
+                            val sym = FormatUtils.currencySymbol(currency)
                             DropdownMenuItem(
-                                text = { Text("${account.name} (₱${FormatUtils.formatAmount(account.balance)})") },
+                            text = { Text("${account.name} ($sym${FormatUtils.formatAmount(account.balance)})") },
                                 onClick = {
                                     selectedToAccount = account
                                     showToAccountDropdown = false
@@ -201,7 +204,7 @@ fun AddTransactionScreen(
                 value = amount,
                 onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) amount = it },
                 label = { Text("Amount") },
-                prefix = { Text("₱") },
+                prefix = { Text(FormatUtils.currencySymbol(currency)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth()
             )
