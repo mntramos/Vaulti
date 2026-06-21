@@ -63,17 +63,6 @@ fun TutorialScreen(onDone: () -> Unit) {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        if (pagerState.currentPage < pages.size - 1) {
-            TextButton(
-                onClick = onDone,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(16.dp)
-            ) {
-                Text("Skip")
-            }
-        }
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -113,6 +102,17 @@ fun TutorialScreen(onDone: () -> Unit) {
                 ) {
                     Text("Next")
                 }
+            }
+        }
+
+        if (pagerState.currentPage < pages.size - 1) {
+            TextButton(
+                onClick = onDone,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+            ) {
+                Text("Skip")
             }
         }
     }
