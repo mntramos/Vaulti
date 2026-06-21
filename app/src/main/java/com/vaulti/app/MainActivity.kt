@@ -91,12 +91,18 @@ fun VaultiMainScreen(
     val goalViewModel: GoalViewModel = hiltViewModel()
 
     val startDestination = if (isLoggedIn) {
-        if (cryptoManager.isInitialized) "dashboard" else "pin"
+        if (cryptoManager.isInitialized) {
+            if (appPreferences.hasSeenTutorial) "dashboard" else "tutorial"
+        } else "pin"
     } else "login"
 
+    val tutorialRoutes = listOf("pin", "tutorial", "dashboard")
+
     LaunchedEffect(isLoggedIn) {
-        if (isLoggedIn && navController.currentDestination?.route != "pin" && navController.currentDestination?.route != "dashboard") {
-            val dest = if (cryptoManager.isInitialized) "dashboard" else "pin"
+        if (isLoggedIn && navController.currentDestination?.route !in tutorialRoutes) {
+            val dest = if (cryptoManager.isInitialized) {
+                if (appPreferences.hasSeenTutorial) "dashboard" else "tutorial"
+            } else "pin"
             navController.navigate(dest) {
                 popUpTo(0) { inclusive = true }
             }
@@ -157,6 +163,18 @@ fun VaultiMainScreen(
                     cryptoViewModel = cryptoViewModel,
                     onComplete = {
                         authViewModel.startSync()
+                        val dest = if (appPreferences.hasSeenTutorial) "dashboard" else "tutorial"
+                        navController.navigate(dest) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            composable("tutorial") {
+                TutorialScreen(
+                    onDone = {
+                        appPreferences.hasSeenTutorial = true
                         navController.navigate("dashboard") {
                             popUpTo(0) { inclusive = true }
                         }

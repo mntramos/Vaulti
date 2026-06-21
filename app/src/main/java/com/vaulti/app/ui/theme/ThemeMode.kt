@@ -50,4 +50,8 @@ class AppPreferences(context: Context) {
     var balancesHidden: Boolean
         get() = prefs.getBoolean("balances_hidden", false)
         set(value) = prefs.edit {putBoolean("balances_hidden", value) }
+
+    var hasSeenTutorial: Boolean
+        get() = prefs.getBoolean("has_seen_tutorial", false)
+        set(value) = prefs.edit { putBoolean("has_seen_tutorial", value) }
 }
