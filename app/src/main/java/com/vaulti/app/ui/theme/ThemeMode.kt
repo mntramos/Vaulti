@@ -3,13 +3,23 @@ package com.vaulti.app.ui.theme
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.google.firebase.auth.FirebaseAuth
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 enum class ThemeMode {
     SYSTEM, LIGHT, DARK
 }
 
-class AppPreferences(context: Context) {
-    private val prefs: SharedPreferences = context.getSharedPreferences("vaulti_prefs", Context.MODE_PRIVATE)
+class AppPreferences(
+    @ApplicationContext private val context: Context,
+    private val firebaseAuth: FirebaseAuth
+) {
+    private val prefs: SharedPreferences
+        get() {
+            val uid = firebaseAuth.currentUser?.uid
+            val name = if (uid != null) "vaulti_prefs_$uid" else "vaulti_prefs"
+            return context.getSharedPreferences(name, Context.MODE_PRIVATE)
+        }
 
     var themeMode: ThemeMode
         get() = ThemeMode.entries[prefs.getInt("theme_mode", 0)]
