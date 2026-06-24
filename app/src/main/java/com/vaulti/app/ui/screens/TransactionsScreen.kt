@@ -85,7 +85,6 @@ fun TransactionsScreen(
                 }
             }
         },
-        modifier = Modifier.padding(bottom = 80.dp)
     ) { padding ->
         if (accounts.isEmpty()) {
             Box(
@@ -152,10 +151,8 @@ fun TransactionsScreen(
             ) {
             LazyColumn(
                 state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding(),
-                contentPadding = PaddingValues(horizontal = 16.dp),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 16.dp) + padding,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
