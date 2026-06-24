@@ -93,6 +93,7 @@ private enum class DashboardAccountSort {
             }
         },
     ) { padding ->
+        Box(Modifier.padding(padding)) {
         val listState = rememberLazyListState()
         LaunchedEffect(Unit) { listState.scrollToItem(0) }
         val isRefreshing by viewModel.isRefreshing.collectAsState()
@@ -116,7 +117,7 @@ private enum class DashboardAccountSort {
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 16.dp) + padding,
+                contentPadding = PaddingValues(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
@@ -430,6 +431,7 @@ private enum class DashboardAccountSort {
             state = pullToRefreshState,
             modifier = Modifier.align(Alignment.TopCenter)
         )
+    }
     }
     }
 }
