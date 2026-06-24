@@ -17,8 +17,10 @@ import com.vaulti.app.ui.FormatUtils
 import com.vaulti.app.ui.theme.ExpenseRed
 import com.vaulti.app.ui.theme.IncomeGreen
 import com.vaulti.app.ui.theme.TransferBlue
-import java.text.SimpleDateFormat
-import java.util.*
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,7 +32,7 @@ fun TransactionItem(
     currency: String = "PHP",
     onEditClick: () -> Unit = {}
 ) {
-    val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
+    val dateFormat = remember { DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.getDefault()) }
     val amountColor = when (transaction.type) {
         TransactionType.EXPENSE -> ExpenseRed
         TransactionType.INCOME -> IncomeGreen
@@ -68,7 +70,7 @@ fun TransactionItem(
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = dateFormat.format(Date(transaction.date)),
+                    text = Instant.ofEpochMilli(transaction.date).atZone(ZoneId.systemDefault()).format(dateFormat),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

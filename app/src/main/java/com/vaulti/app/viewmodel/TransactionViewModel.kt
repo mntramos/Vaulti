@@ -17,7 +17,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
-import java.util.Calendar
+import java.time.Instant
+import java.time.ZoneId
 import javax.inject.Inject
 
 @HiltViewModel
@@ -109,21 +110,21 @@ class TransactionViewModel @Inject constructor(
     }
 
     private fun getCurrentPeriodStart(startDate: Long, period: BudgetPeriod, now: Long): Long {
-        val cal = Calendar.getInstance().apply { timeInMillis = startDate }
-        val nowCal = Calendar.getInstance().apply { timeInMillis = now }
+        val startInstant = Instant.ofEpochMilli(startDate).atZone(ZoneId.systemDefault())
+        val nowInstant = Instant.ofEpochMilli(now).atZone(ZoneId.systemDefault())
         return when (period) {
             BudgetPeriod.WEEKLY -> {
                 val daysSinceStart = ((now - startDate) / (7 * 24 * 60 * 60 * 1000)).toInt()
-                cal.apply { add(Calendar.DAY_OF_YEAR, daysSinceStart * 7) }.timeInMillis
+                startInstant.plusDays((daysSinceStart * 7).toLong()).toInstant().toEpochMilli()
             }
             BudgetPeriod.MONTHLY -> {
-                val monthsDiff = (nowCal.get(Calendar.YEAR) - cal.get(Calendar.YEAR)) * 12 +
-                        nowCal.get(Calendar.MONTH) - cal.get(Calendar.MONTH)
-                cal.apply { add(Calendar.MONTH, monthsDiff) }.timeInMillis
+                val monthsDiff = (nowInstant.year - startInstant.year) * 12 +
+                        nowInstant.monthValue - startInstant.monthValue
+                startInstant.plusMonths(monthsDiff.toLong()).toInstant().toEpochMilli()
             }
             BudgetPeriod.YEARLY -> {
-                val yearsDiff = nowCal.get(Calendar.YEAR) - cal.get(Calendar.YEAR)
-                cal.apply { add(Calendar.YEAR, yearsDiff) }.timeInMillis
+                val yearsDiff = nowInstant.year - startInstant.year
+                startInstant.plusYears(yearsDiff.toLong()).toInstant().toEpochMilli()
             }
         }
     }

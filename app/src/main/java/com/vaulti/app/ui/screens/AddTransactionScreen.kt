@@ -20,8 +20,13 @@ import com.vaulti.app.data.database.entity.TransactionType
 import com.vaulti.app.ui.FormatUtils
 import com.vaulti.app.viewmodel.AccountViewModel
 import com.vaulti.app.viewmodel.TransactionViewModel
-import java.text.SimpleDateFormat
-import java.util.*
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -80,7 +85,7 @@ fun AddTransactionScreen(
     var showDatePicker by remember { mutableStateOf(false) }
     var showAddCategoryDialog by remember { mutableStateOf(false) }
 
-    val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
+    val dateFormat = remember { DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.getDefault()) }
     val filteredAccounts = if (selectedAccount != null)
         accounts.filter { it.id != selectedAccount!!.id } else accounts
 
@@ -281,7 +286,7 @@ fun AddTransactionScreen(
 
             Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
-                    value = dateFormat.format(Date(date)),
+                    value = Instant.ofEpochMilli(date).atZone(ZoneId.systemDefault()).format(dateFormat),
                     onValueChange = {},
                     label = { Text("Date") },
                     readOnly = true,
@@ -305,11 +310,8 @@ fun AddTransactionScreen(
                     confirmButton = {
                         TextButton(onClick = {
                             datePickerState.selectedDateMillis?.let { millis ->
-                                val utcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = millis }
-                                date = Calendar.getInstance().apply {
-                                    set(utcCal.get(Calendar.YEAR), utcCal.get(Calendar.MONTH), utcCal.get(Calendar.DAY_OF_MONTH), 23, 59, 59)
-                                    set(Calendar.MILLISECOND, 999)
-                                }.timeInMillis
+                                val utcDate = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
+                                date = utcDate.atTime(LocalTime.MAX).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
                             }
                             showDatePicker = false
                         }) {
