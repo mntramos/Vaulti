@@ -2,7 +2,6 @@ package com.vaulti.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vaulti.app.data.database.dao.AccountLastTransactionRaw
 import com.vaulti.app.data.database.entity.Account
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.data.repository.AccountRepository
