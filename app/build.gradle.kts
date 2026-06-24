@@ -7,11 +7,10 @@ plugins {
     id("com.google.firebase.crashlytics")
 }
 
-fun getSemverVersionCode(versionName: String): Int {
-    val parts = versionName.split(".")
-    return (parts.getOrElse(0) { "0" }.toInt() * 100000) +
-           (parts.getOrElse(1) { "0" }.toInt() * 1000) +
-           parts.getOrElse(2) { "0" }.toInt()
+fun calculateVersionCode(versionName: String): Int {
+    val (major, minor, patch) = versionName.split(".")
+        .map { it.toIntOrNull() ?: 0 }
+    return major * 1_000_000 + minor * 10_000 + patch
 }
 
 android {
@@ -22,7 +21,7 @@ android {
         applicationId = "com.vaulti.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = getSemverVersionCode("0.1.1")
+        versionCode = calculateVersionCode("0.1.1")
         versionName = "0.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
