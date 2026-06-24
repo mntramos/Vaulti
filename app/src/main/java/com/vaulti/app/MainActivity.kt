@@ -111,6 +111,12 @@ fun VaultiMainScreen(
     val tutorialRoutes = listOf("pin", "tutorial", "dashboard")
 
     LaunchedEffect(isLoggedIn) {
+        if (isLoggedIn && cryptoManager.isInitialized) {
+            authViewModel.startSync()
+        }
+    }
+
+    LaunchedEffect(isLoggedIn) {
         if (isLoggedIn && navController.currentDestination?.route !in tutorialRoutes) {
             val dest = if (cryptoManager.isInitialized) {
                 if (appPreferences.hasSeenTutorial) "dashboard" else "tutorial"

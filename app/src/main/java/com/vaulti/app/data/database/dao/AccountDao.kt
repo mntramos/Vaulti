@@ -38,4 +38,10 @@ interface AccountDao {
 
     @Query("UPDATE accounts SET isArchived = 1 WHERE id = :id")
     suspend fun archive(id: Long)
+
+    @Query("SELECT id FROM accounts")
+    suspend fun getAllIds(): List<Long>
+
+    @Query("DELETE FROM accounts WHERE id = :id")
+    suspend fun deleteById(id: Long)
 }
