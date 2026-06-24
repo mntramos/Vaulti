@@ -2,7 +2,6 @@ package com.vaulti.app.ui.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -15,10 +14,10 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,10 +35,10 @@ private enum class DashboardAccountSort {
     NAME_ASC, NAME_DESC, BALANCE_ASC, BALANCE_DESC, LAST_UPDATED_DESC, LAST_UPDATED_ASC
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
-@Composable
-@Suppress("UnusedMaterial3ScaffoldPaddingParameter")
-fun DashboardScreen(
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    @Suppress("UnusedMaterial3ScaffoldPaddingParameter")
+    fun DashboardScreen(
     viewModel: DashboardViewModel,
     appPreferences: AppPreferences,
     balancesHidden: Boolean = false,
@@ -99,13 +98,22 @@ fun DashboardScreen(
         val listState = rememberLazyListState()
         LaunchedEffect(Unit) { listState.scrollToItem(0) }
         val isRefreshing by viewModel.isRefreshing.collectAsState()
-        val pullRefreshState = rememberPullRefreshState(
-            refreshing = isRefreshing,
-            onRefresh = { viewModel.refresh() }
-        )
+        val pullToRefreshState = rememberPullToRefreshState()
+
+        if (pullToRefreshState.isRefreshing) {
+            LaunchedEffect(true) {
+                viewModel.refresh()
+            }
+        }
+
+        LaunchedEffect(isRefreshing) {
+            if (!isRefreshing) {
+                pullToRefreshState.endRefresh()
+            }
+        }
 
         Box(
-            modifier = Modifier.pullRefresh(pullRefreshState)
+            modifier = Modifier.nestedScroll(pullToRefreshState.nestedScrollConnection)
         ) {
             LazyColumn(
                 state = listState,
@@ -422,9 +430,8 @@ fun DashboardScreen(
                 item { Spacer(modifier = Modifier.height(120.dp)) }
             }
         }
-        PullRefreshIndicator(
-            refreshing = isRefreshing,
-            state = pullRefreshState,
+        PullToRefreshContainer(
+            state = pullToRefreshState,
             modifier = Modifier.align(Alignment.TopCenter)
         )
     }
