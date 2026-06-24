@@ -37,7 +37,6 @@ private enum class DashboardAccountSort {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    @Suppress("UnusedMaterial3ScaffoldPaddingParameter")
     fun DashboardScreen(
     viewModel: DashboardViewModel,
     appPreferences: AppPreferences,
@@ -93,8 +92,7 @@ private enum class DashboardAccountSort {
                 }
             }
         },
-        modifier = Modifier.padding(bottom = 80.dp)
-    ) { _ ->
+    ) { padding ->
         val listState = rememberLazyListState()
         LaunchedEffect(Unit) { listState.scrollToItem(0) }
         val isRefreshing by viewModel.isRefreshing.collectAsState()
@@ -117,10 +115,8 @@ private enum class DashboardAccountSort {
         ) {
             LazyColumn(
                 state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding(),
-                contentPadding = PaddingValues(horizontal = 16.dp),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 16.dp) + padding,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
