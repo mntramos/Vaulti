@@ -38,15 +38,12 @@ class DashboardViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val totalBalance: StateFlow<Double> = accountRepository.getTotalBalance()
-        .map { it ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val totalAssets: StateFlow<Double> = accountRepository.getTotalAssets()
-        .map { it ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val totalLiabilities: StateFlow<Double> = accountRepository.getTotalLiabilities()
-        .map { it ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val totalLiabilitiesDisplay: StateFlow<Double> = totalLiabilities
@@ -61,10 +58,8 @@ class DashboardViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
     val monthlyExpense: StateFlow<Double> = transactionRepository.getCurrentMonthExpense()
-        .map { it ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val monthlyIncome: StateFlow<Double> = transactionRepository.getCurrentMonthIncome()
-        .map { it ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 }
