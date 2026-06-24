@@ -18,8 +18,8 @@ class TransactionRepository(
     fun getRecentTransactions(limit: Int = 10): Flow<List<Transaction>> = transactionDao.getRecentTransactions(limit)
     fun getTotalExpense(start: Long, end: Long): Flow<Double?> = transactionDao.getTotalExpense(start, end)
     fun getTotalIncome(start: Long, end: Long): Flow<Double?> = transactionDao.getTotalIncome(start, end)
-    fun getCurrentMonthExpense(): Flow<Double?> = transactionDao.getCurrentMonthExpense()
-    fun getCurrentMonthIncome(): Flow<Double?> = transactionDao.getCurrentMonthIncome()
+    fun getCurrentMonthExpense(startOfMonth: Long, startOfNextMonth: Long): Flow<Double?> = transactionDao.getCurrentMonthExpense(startOfMonth, startOfNextMonth)
+    fun getCurrentMonthIncome(startOfMonth: Long, startOfNextMonth: Long): Flow<Double?> = transactionDao.getCurrentMonthIncome(startOfMonth, startOfNextMonth)
     fun getLastTransactionDateByAccount(): Flow<List<AccountLastTransactionRaw>> = transactionDao.getLastTransactionDateByAccount()
     suspend fun getById(id: Long): Transaction? = transactionDao.getById(id)
 

@@ -24,8 +24,10 @@ import com.vaulti.app.data.database.entity.Goal
 import com.vaulti.app.ui.FormatUtils
 import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.viewmodel.GoalViewModel
-import java.text.SimpleDateFormat
-import java.util.*
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 private enum class GoalSort {
     NAME_ASC, NAME_DESC, TARGET_ASC, TARGET_DESC, PROGRESS_ASC, PROGRESS_DESC
@@ -305,7 +307,7 @@ private fun GoalCard(
     currency: String = "PHP"
 ) {
     val progress = if (goal.targetAmount > 0) (goal.currentAmount / goal.targetAmount).toFloat().coerceIn(0f, 1f) else 0f
-    val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
+    val dateFormat = remember { DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.getDefault()) }
     val hasReachedTarget = goal.currentAmount >= goal.targetAmount
 
     Card(
@@ -335,7 +337,7 @@ private fun GoalCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (goal.targetDate != null) {
                         Text(
-                            text = dateFormat.format(Date(goal.targetDate)),
+                            text = Instant.ofEpochMilli(goal.targetDate).atZone(ZoneId.systemDefault()).format(dateFormat),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -437,7 +439,7 @@ private fun AddGoalDialog(
     var hasTargetDate by remember { mutableStateOf(initial?.targetDate != null) }
     var targetDate by remember { mutableLongStateOf(initial?.targetDate ?: System.currentTimeMillis()) }
     var showDatePicker by remember { mutableStateOf(false) }
-    val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+    val dateFormat = DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.getDefault())
     val isEditing = initial != null
 
     AlertDialog(
@@ -476,7 +478,7 @@ private fun AddGoalDialog(
                 if (hasTargetDate) {
                     Box(modifier = Modifier.fillMaxWidth()) {
                         OutlinedTextField(
-                            value = dateFormat.format(Date(targetDate)),
+                            value = Instant.ofEpochMilli(targetDate).atZone(ZoneId.systemDefault()).format(dateFormat),
                             onValueChange = {},
                             label = { Text("Target Date") },
                             readOnly = true,
