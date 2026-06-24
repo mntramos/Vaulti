@@ -67,13 +67,14 @@ fun AccountsScreen(
             }
         },
     ) { padding ->
+        Box(Modifier.padding(padding)) {
         val listState = rememberLazyListState()
         LaunchedEffect(Unit) { listState.scrollToItem(0) }
 
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 16.dp) + padding,
+                contentPadding = PaddingValues(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
@@ -183,6 +184,7 @@ fun AccountsScreen(
             }
 
             item { Spacer(modifier = Modifier.height(120.dp)) }
+        }
         }
     }
 

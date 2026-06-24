@@ -129,6 +129,7 @@ fun TransactionsScreen(
                 }
             }
         } else {
+            Box(Modifier.padding(padding)) {
             val listState = rememberLazyListState()
             LaunchedEffect(Unit) { listState.scrollToItem(0) }
             val isRefreshing by viewModel.isRefreshing.collectAsState()
@@ -152,7 +153,7 @@ fun TransactionsScreen(
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 16.dp) + padding,
+                contentPadding = PaddingValues(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
@@ -322,6 +323,7 @@ fun TransactionsScreen(
                 state = pullToRefreshState,
                 modifier = Modifier.align(Alignment.TopCenter)
             )
+        }
         }
         }
     }
