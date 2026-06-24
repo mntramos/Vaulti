@@ -20,6 +20,7 @@ import com.vaulti.app.data.database.entity.TransactionType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -33,7 +34,7 @@ class SyncManager @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val cryptoManager: CryptoManager
 ) {
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private var scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val listeners = mutableListOf<ListenerRegistration>()
 
     private val uid: String?
@@ -283,6 +284,8 @@ class SyncManager @Inject constructor(
     }
 
     fun stopListening() {
+        scope.cancel()
+        scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
         listeners.forEach { it.remove() }
         listeners.clear()
     }
