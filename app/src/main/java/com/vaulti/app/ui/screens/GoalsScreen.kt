@@ -233,8 +233,7 @@ fun GoalsScreen(
         )
     }
 
-    if (showContributeDialog != null) {
-        val goal = showContributeDialog!!
+    showContributeDialog?.let { goal ->
         var contributeAmount by remember { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { showContributeDialog = null },
@@ -269,8 +268,7 @@ fun GoalsScreen(
         )
     }
 
-    if (showDeleteConfirm != null) {
-        val goal = showDeleteConfirm!!
+    showDeleteConfirm?.let { goal ->
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = null },
             title = { Text("Delete Goal") },
