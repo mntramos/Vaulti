@@ -33,7 +33,6 @@ private enum class AccountSort {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Suppress("UnusedMaterial3ScaffoldPaddingParameter")
 fun AccountsScreen(
     viewModel: AccountViewModel,
     appPreferences: AppPreferences,
@@ -67,16 +66,14 @@ fun AccountsScreen(
                 Icon(Icons.Filled.Add, contentDescription = "Add Account")
             }
         },
-        modifier = Modifier.padding(bottom = 80.dp)
-    ) { _ ->
+    ) { padding ->
+        Box(Modifier.padding(padding)) {
         val listState = rememberLazyListState()
         LaunchedEffect(Unit) { listState.scrollToItem(0) }
 
             LazyColumn(
                 state = listState,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding(),
+                modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -187,6 +184,7 @@ fun AccountsScreen(
             }
 
             item { Spacer(modifier = Modifier.height(120.dp)) }
+        }
         }
     }
 
