@@ -2,13 +2,14 @@ package com.vaulti.app.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vaulti.app.data.database.dao.AccountLastTransactionRaw
 import com.vaulti.app.data.database.entity.Account
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.data.repository.AccountRepository
 import com.vaulti.app.data.repository.TransactionRepository
 import com.vaulti.app.data.sync.SyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.LocalDate
+import java.time.ZoneId
 import kotlin.math.abs
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -60,11 +61,15 @@ class DashboardViewModel @Inject constructor(
         .map { list -> list.groupBy({ it.cId }, { it.lastDate }).mapValues { (_, dates) -> dates.max() } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
-    val monthlyExpense: StateFlow<Double> = transactionRepository.getCurrentMonthExpense()
+    private val now = LocalDate.now()
+    private val startOfMonth = now.withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    private val startOfNextMonth = now.plusMonths(1).withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+
+    val monthlyExpense: StateFlow<Double> = transactionRepository.getCurrentMonthExpense(startOfMonth, startOfNextMonth)
         .map { it ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
-    val monthlyIncome: StateFlow<Double> = transactionRepository.getCurrentMonthIncome()
+    val monthlyIncome: StateFlow<Double> = transactionRepository.getCurrentMonthIncome(startOfMonth, startOfNextMonth)
         .map { it ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 }

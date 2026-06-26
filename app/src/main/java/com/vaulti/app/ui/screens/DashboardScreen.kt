@@ -432,7 +432,7 @@ fun DashboardScreen(
 }
 
 private fun getTimeOfDay(): String {
-    val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+    val hour = java.time.LocalTime.now().hour
     return when (hour) {
         in 0..11 -> "Morning"
         in 12..16 -> "Afternoon"
