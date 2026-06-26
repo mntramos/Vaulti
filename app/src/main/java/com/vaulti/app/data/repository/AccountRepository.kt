@@ -5,6 +5,7 @@ import com.vaulti.app.data.database.entity.Account
 import com.vaulti.app.data.database.entity.AccountType
 import com.vaulti.app.data.sync.SyncManager
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class AccountRepository(
     private val accountDao: AccountDao,
@@ -12,9 +13,9 @@ class AccountRepository(
 ) {
     fun getAllActive(): Flow<List<Account>> = accountDao.getAllActive()
     fun getAll(): Flow<List<Account>> = accountDao.getAll()
-    fun getTotalBalance(): Flow<Double?> = accountDao.getTotalBalance()
-    fun getTotalAssets(): Flow<Double?> = accountDao.getTotalAssets()
-    fun getTotalLiabilities(): Flow<Double?> = accountDao.getTotalLiabilities()
+    fun getTotalBalance(): Flow<Double> = accountDao.getTotalBalance().map { it ?: 0.0 }
+    fun getTotalAssets(): Flow<Double> = accountDao.getTotalAssets().map { it ?: 0.0 }
+    fun getTotalLiabilities(): Flow<Double> = accountDao.getTotalLiabilities().map { it ?: 0.0 }
 
     suspend fun insert(account: Account): Long {
         val id = accountDao.insert(account)

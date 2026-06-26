@@ -128,9 +128,9 @@ fun PinScreen(
                             Spacer(modifier = Modifier.height(24.dp))
                         }
 
-                        if (pinError != null) {
+                        pinError?.let { err ->
                             Text(
-                                text = pinError!!,
+                                text = err,
                                 color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodySmall
                             )

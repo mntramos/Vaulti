@@ -5,6 +5,7 @@ import com.vaulti.app.data.database.dao.TransactionDao
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.data.sync.SyncManager
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class TransactionRepository(
     private val transactionDao: TransactionDao,
@@ -16,10 +17,10 @@ class TransactionRepository(
     fun getByDateRangeDesc(start: Long, end: Long): Flow<List<Transaction>> = transactionDao.getByDateRangeDesc(start, end)
     fun getByAccountAndDateRange(accountId: Long, start: Long, end: Long): Flow<List<Transaction>> = transactionDao.getByAccountAndDateRange(accountId, start, end)
     fun getRecentTransactions(limit: Int = 10): Flow<List<Transaction>> = transactionDao.getRecentTransactions(limit)
-    fun getTotalExpense(start: Long, end: Long): Flow<Double?> = transactionDao.getTotalExpense(start, end)
-    fun getTotalIncome(start: Long, end: Long): Flow<Double?> = transactionDao.getTotalIncome(start, end)
-    fun getCurrentMonthExpense(startOfMonth: Long, startOfNextMonth: Long): Flow<Double?> = transactionDao.getCurrentMonthExpense(startOfMonth, startOfNextMonth)
-    fun getCurrentMonthIncome(startOfMonth: Long, startOfNextMonth: Long): Flow<Double?> = transactionDao.getCurrentMonthIncome(startOfMonth, startOfNextMonth)
+    fun getTotalExpense(start: Long, end: Long): Flow<Double> = transactionDao.getTotalExpense(start, end).map { it ?: 0.0 }
+    fun getTotalIncome(start: Long, end: Long): Flow<Double> = transactionDao.getTotalIncome(start, end).map { it ?: 0.0 }
+    fun getCurrentMonthExpense(startOfMonth: Long, startOfNextMonth: Long): Flow<Double> = transactionDao.getCurrentMonthExpense(startOfMonth, startOfNextMonth).map { it ?: 0.0 }
+    fun getCurrentMonthIncome(startOfMonth: Long, startOfNextMonth: Long): Flow<Double> = transactionDao.getCurrentMonthIncome(startOfMonth, startOfNextMonth).map { it ?: 0.0 }
     fun getLastTransactionDateByAccount(): Flow<List<AccountLastTransactionRaw>> = transactionDao.getLastTransactionDateByAccount()
     suspend fun getById(id: Long): Transaction? = transactionDao.getById(id)
 
