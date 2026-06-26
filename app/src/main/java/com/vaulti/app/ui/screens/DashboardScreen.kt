@@ -15,9 +15,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
-import androidx.compose.material3.pulltorefresh.PullToRefreshContainer
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -97,22 +95,11 @@ private enum class DashboardAccountSort {
         val listState = rememberLazyListState()
         LaunchedEffect(Unit) { listState.scrollToItem(0) }
         val isRefreshing by viewModel.isRefreshing.collectAsState()
-        val pullToRefreshState = rememberPullToRefreshState()
 
-        if (pullToRefreshState.isRefreshing) {
-            LaunchedEffect(true) {
-                viewModel.refresh()
-            }
-        }
-
-        LaunchedEffect(isRefreshing) {
-            if (!isRefreshing) {
-                pullToRefreshState.endRefresh()
-            }
-        }
-
-        Box(
-            modifier = Modifier.nestedScroll(pullToRefreshState.nestedScrollConnection)
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { viewModel.refresh() },
+            modifier = Modifier.fillMaxSize()
         ) {
             LazyColumn(
                 state = listState,
@@ -427,13 +414,9 @@ private enum class DashboardAccountSort {
                 item { Spacer(modifier = Modifier.height(120.dp)) }
             }
         }
-        PullToRefreshContainer(
-            state = pullToRefreshState,
-            modifier = Modifier.align(Alignment.TopCenter)
-        )
     }
     }
-    }
+}
 }
 
 private fun getTimeOfDay(): String {
