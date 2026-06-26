@@ -25,8 +25,13 @@ import com.vaulti.app.ui.FormatUtils
 import com.vaulti.app.ui.components.TransactionItem
 import com.vaulti.app.viewmodel.AccountViewModel
 import com.vaulti.app.viewmodel.TransactionViewModel
-import java.text.SimpleDateFormat
-import java.util.*
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,7 +76,7 @@ fun AccountDetailScreen(
         }
     }
 
-    val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()) }
+    val dateFormat = remember { DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.getDefault()) }
 
     Scaffold(
         floatingActionButton = {
@@ -226,7 +231,7 @@ fun AccountDetailScreen(
                     ) {
                         Icon(Icons.Filled.DateRange, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(filterStartDate?.let { dateFormat.format(Date(it)) } ?: "Start Date")
+                        Text(filterStartDate?.let { Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).format(dateFormat) } ?: "Start Date")
                     }
                     OutlinedButton(
                         modifier = Modifier.weight(1f),
@@ -234,7 +239,7 @@ fun AccountDetailScreen(
                     ) {
                         Icon(Icons.Filled.DateRange, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(filterEndDate?.let { dateFormat.format(Date(it)) } ?: "End Date")
+                        Text(filterEndDate?.let { Instant.ofEpochMilli(it).atZone(ZoneId.systemDefault()).format(dateFormat) } ?: "End Date")
                     }
                     if (filterStartDate != null || filterEndDate != null) {
                         TextButton(onClick = { filterStartDate = null; filterEndDate = null }) {
@@ -280,11 +285,8 @@ fun AccountDetailScreen(
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
-                        val utcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = millis }
-                        filterStartDate = Calendar.getInstance().apply {
-                            set(utcCal.get(Calendar.YEAR), utcCal.get(Calendar.MONTH), utcCal.get(Calendar.DAY_OF_MONTH), 0, 0, 0)
-                            set(Calendar.MILLISECOND, 0)
-                        }.timeInMillis
+                        val utcDate = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
+                        filterStartDate = utcDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
                     }
                     showStartDatePicker = false
                 }) {
@@ -308,11 +310,8 @@ fun AccountDetailScreen(
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
-                        val utcCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = millis }
-                        filterEndDate = Calendar.getInstance().apply {
-                            set(utcCal.get(Calendar.YEAR), utcCal.get(Calendar.MONTH), utcCal.get(Calendar.DAY_OF_MONTH), 23, 59, 59)
-                            set(Calendar.MILLISECOND, 999)
-                        }.timeInMillis
+                        val utcDate = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
+                        filterEndDate = utcDate.atTime(LocalTime.MAX).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
                     }
                     showEndDatePicker = false
                 }) {
