@@ -29,4 +29,10 @@ interface GoalDao {
 
     @Query("UPDATE goals SET isCompleted = 1 WHERE id = :id")
     suspend fun completeGoal(id: Long)
+
+    @Query("SELECT id FROM goals")
+    suspend fun getAllIds(): List<Long>
+
+    @Query("DELETE FROM goals WHERE id = :id")
+    suspend fun deleteById(id: Long)
 }

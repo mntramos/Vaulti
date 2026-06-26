@@ -150,9 +150,11 @@ class SyncManager @Inject constructor(
         val baseRef = firestore.collection("users").document(currentUid)
 
         try {
+            val firestoreIds = mutableSetOf<Long>()
             val accountSnapshot = baseRef.collection("accounts").get().await()
             for (doc in accountSnapshot.documents) {
                 val account = doc.data?.toAccount(cryptoManager, currentUid) ?: continue
+                firestoreIds.add(account.id)
                 val existing = accountDao.getById(account.id)
                 if (existing != null) {
                     accountDao.update(account)
@@ -160,15 +162,27 @@ class SyncManager @Inject constructor(
                     accountDao.insert(account)
                 }
             }
+            val staleAccountIds = accountDao.getAllIds().toSet() - firestoreIds
+            for (id in staleAccountIds) {
+                accountDao.deleteById(id)
+            }
         } catch (e: Exception) {
             Log.e("SyncManager", "pullAll: accounts failed", e)
             FirebaseCrashlytics.getInstance().recordException(e)
         }
 
         try {
+            val firestoreIds = mutableSetOf<Long>()
             val transactionSnapshot = baseRef.collection("transactions").get().await()
             for (doc in transactionSnapshot.documents) {
-                doc.data?.toTransaction(cryptoManager, currentUid)?.let { transactionDao.insert(it) }
+                doc.data?.toTransaction(cryptoManager, currentUid)?.let {
+                    firestoreIds.add(it.id)
+                    transactionDao.insert(it)
+                }
+            }
+            val staleTransactionIds = transactionDao.getAllIds().toSet() - firestoreIds
+            for (id in staleTransactionIds) {
+                transactionDao.deleteById(id)
             }
         } catch (e: Exception) {
             Log.e("SyncManager", "pullAll: transactions failed", e)
@@ -176,9 +190,17 @@ class SyncManager @Inject constructor(
         }
 
         try {
+            val firestoreIds = mutableSetOf<Long>()
             val budgetSnapshot = baseRef.collection("budgets").get().await()
             for (doc in budgetSnapshot.documents) {
-                doc.data?.toBudget(cryptoManager, currentUid)?.let { budgetDao.insert(it) }
+                doc.data?.toBudget(cryptoManager, currentUid)?.let {
+                    firestoreIds.add(it.id)
+                    budgetDao.insert(it)
+                }
+            }
+            val staleBudgetIds = budgetDao.getAllIds().toSet() - firestoreIds
+            for (id in staleBudgetIds) {
+                budgetDao.deleteById(id)
             }
         } catch (e: Exception) {
             Log.e("SyncManager", "pullAll: budgets failed", e)
@@ -186,9 +208,17 @@ class SyncManager @Inject constructor(
         }
 
         try {
+            val firestoreIds = mutableSetOf<Long>()
             val goalSnapshot = baseRef.collection("goals").get().await()
             for (doc in goalSnapshot.documents) {
-                doc.data?.toGoal(cryptoManager, currentUid)?.let { goalDao.insert(it) }
+                doc.data?.toGoal(cryptoManager, currentUid)?.let {
+                    firestoreIds.add(it.id)
+                    goalDao.insert(it)
+                }
+            }
+            val staleGoalIds = goalDao.getAllIds().toSet() - firestoreIds
+            for (id in staleGoalIds) {
+                goalDao.deleteById(id)
             }
         } catch (e: Exception) {
             Log.e("SyncManager", "pullAll: goals failed", e)
@@ -196,9 +226,17 @@ class SyncManager @Inject constructor(
         }
 
         try {
+            val firestoreIds = mutableSetOf<Long>()
             val categorySnapshot = baseRef.collection("categories").get().await()
             for (doc in categorySnapshot.documents) {
-                doc.data?.toCategory(cryptoManager, currentUid)?.let { categoryDao.insert(it) }
+                doc.data?.toCategory(cryptoManager, currentUid)?.let {
+                    firestoreIds.add(it.id)
+                    categoryDao.insert(it)
+                }
+            }
+            val staleCategoryIds = categoryDao.getAllIds().toSet() - firestoreIds
+            for (id in staleCategoryIds) {
+                categoryDao.deleteById(id)
             }
         } catch (e: Exception) {
             Log.e("SyncManager", "pullAll: categories failed", e)
@@ -207,6 +245,7 @@ class SyncManager @Inject constructor(
     }
 
     fun startListening() {
+        stopListening()
         val currentUid = uid ?: return
         val baseRef = firestore.collection("users").document(currentUid)
 
@@ -216,7 +255,11 @@ class SyncManager @Inject constructor(
                 return@addSnapshotListener
             }
             snapshot?.documentChanges?.forEach { change ->
-                if (change.type == DocumentChange.Type.REMOVED) return@forEach
+                if (change.type == DocumentChange.Type.REMOVED) {
+                    val id = change.document.id.toLongOrNull() ?: return@forEach
+                    scope.launch { database.accountDao().deleteById(id) }
+                    return@forEach
+                }
                 val account = change.document.data.toAccount(cryptoManager, currentUid) ?: return@forEach
                 scope.launch {
                     val existing = database.accountDao().getById(account.id)
@@ -236,7 +279,11 @@ class SyncManager @Inject constructor(
                 return@addSnapshotListener
             }
             snapshot?.documentChanges?.forEach { change ->
-                if (change.type == DocumentChange.Type.REMOVED) return@forEach
+                if (change.type == DocumentChange.Type.REMOVED) {
+                    val id = change.document.id.toLongOrNull() ?: return@forEach
+                    scope.launch { database.transactionDao().deleteById(id) }
+                    return@forEach
+                }
                 val transaction = change.document.data.toTransaction(cryptoManager, currentUid) ?: return@forEach
                 scope.launch { database.transactionDao().insert(transaction) }
             }
@@ -249,7 +296,11 @@ class SyncManager @Inject constructor(
                 return@addSnapshotListener
             }
             snapshot?.documentChanges?.forEach { change ->
-                if (change.type == DocumentChange.Type.REMOVED) return@forEach
+                if (change.type == DocumentChange.Type.REMOVED) {
+                    val id = change.document.id.toLongOrNull() ?: return@forEach
+                    scope.launch { database.budgetDao().deleteById(id) }
+                    return@forEach
+                }
                 val budget = change.document.data.toBudget(cryptoManager, currentUid) ?: return@forEach
                 scope.launch { database.budgetDao().insert(budget) }
             }
@@ -262,7 +313,11 @@ class SyncManager @Inject constructor(
                 return@addSnapshotListener
             }
             snapshot?.documentChanges?.forEach { change ->
-                if (change.type == DocumentChange.Type.REMOVED) return@forEach
+                if (change.type == DocumentChange.Type.REMOVED) {
+                    val id = change.document.id.toLongOrNull() ?: return@forEach
+                    scope.launch { database.goalDao().deleteById(id) }
+                    return@forEach
+                }
                 val goal = change.document.data.toGoal(cryptoManager, currentUid) ?: return@forEach
                 scope.launch { database.goalDao().insert(goal) }
             }
@@ -275,7 +330,11 @@ class SyncManager @Inject constructor(
                 return@addSnapshotListener
             }
             snapshot?.documentChanges?.forEach { change ->
-                if (change.type == DocumentChange.Type.REMOVED) return@forEach
+                if (change.type == DocumentChange.Type.REMOVED) {
+                    val id = change.document.id.toLongOrNull() ?: return@forEach
+                    scope.launch { database.categoryDao().deleteById(id) }
+                    return@forEach
+                }
                 val category = change.document.data.toCategory(cryptoManager, currentUid) ?: return@forEach
                 scope.launch { database.categoryDao().insert(category) }
             }
