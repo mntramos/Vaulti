@@ -27,4 +27,9 @@ interface BudgetDao {
     @Query("UPDATE budgets SET spent = :spent WHERE id = :id")
     suspend fun updateSpent(id: Long, spent: Double)
 
+    @Query("SELECT id FROM budgets")
+    suspend fun getAllIds(): List<Long>
+
+    @Query("DELETE FROM budgets WHERE id = :id")
+    suspend fun deleteById(id: Long)
 }
