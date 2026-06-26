@@ -11,7 +11,7 @@ import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.SecureRandom
-import java.util.Base64
+import android.util.Base64
 import javax.crypto.Cipher
 import javax.crypto.SecretKey
 import javax.crypto.SecretKeyFactory
@@ -62,8 +62,8 @@ class CryptoManager @Inject constructor(
         val encryptedKey = wrapKey(key, kek)
 
         val doc = mapOf(
-            "encryptedKey" to Base64.getEncoder().encodeToString(encryptedKey),
-            "salt" to Base64.getEncoder().encodeToString(salt),
+            "encryptedKey" to Base64.encodeToString(encryptedKey, Base64.NO_WRAP),
+            "salt" to Base64.encodeToString(salt, Base64.NO_WRAP),
             "iterations" to ITERATIONS
         )
 
@@ -86,8 +86,8 @@ class CryptoManager @Inject constructor(
         val saltB64 = doc.getString("salt") ?: return false
         val iterations = doc.getLong("iterations")?.toInt() ?: ITERATIONS
 
-        val encryptedKey = Base64.getDecoder().decode(encryptedKeyB64)
-        val salt = Base64.getDecoder().decode(saltB64)
+        val encryptedKey = Base64.decode(encryptedKeyB64, Base64.NO_WRAP)
+        val salt = Base64.decode(saltB64, Base64.NO_WRAP)
 
         val kek = deriveKeyFromPin(pin, salt, iterations)
         val key = try {
@@ -106,7 +106,7 @@ class CryptoManager @Inject constructor(
         if (aesKey != null) return true
 
         val blob = prefs.getString("wrapped_key_$currentUid", null) ?: return false
-        val encryptedKey = Base64.getDecoder().decode(blob)
+        val encryptedKey = Base64.decode(blob, Base64.NO_WRAP)
 
         return try {
             val deviceKey = getOrCreateDeviceKeyPair(currentUid)
@@ -135,12 +135,12 @@ class CryptoManager @Inject constructor(
         val combined = ByteArray(iv.size + ciphertext.size)
         System.arraycopy(iv, 0, combined, 0, iv.size)
         System.arraycopy(ciphertext, 0, combined, iv.size, ciphertext.size)
-        return Base64.getEncoder().encodeToString(combined)
+        return Base64.encodeToString(combined, Base64.NO_WRAP)
     }
 
     fun decrypt(ciphertext: String, context: String): String {
         val key = aesKey ?: throw IllegalStateException("Crypto not initialized")
-        val combined = Base64.getDecoder().decode(ciphertext)
+        val combined = Base64.decode(ciphertext, Base64.NO_WRAP)
         val iv = combined.copyOfRange(0, GCM_IV_LENGTH)
         val ct = combined.copyOfRange(GCM_IV_LENGTH, combined.size)
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
@@ -179,7 +179,7 @@ class CryptoManager @Inject constructor(
             val cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding")
             cipher.init(Cipher.ENCRYPT_MODE, deviceKey.public)
             val wrapped = cipher.doFinal(key.encoded)
-            prefs.edit().putString("wrapped_key_$uid", Base64.getEncoder().encodeToString(wrapped)).apply()
+            prefs.edit().putString("wrapped_key_$uid", Base64.encodeToString(wrapped, Base64.NO_WRAP)).apply()
         } catch (_: Exception) {}
     }
 
