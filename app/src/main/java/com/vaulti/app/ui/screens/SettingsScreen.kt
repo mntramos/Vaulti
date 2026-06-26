@@ -246,7 +246,7 @@ fun SettingsScreen(
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCurrencyDropdown) },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .menuAnchor()
+                                    .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
                             )
                             ExposedDropdownMenu(
                                 expanded = showCurrencyDropdown,
