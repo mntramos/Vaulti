@@ -5,8 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
@@ -14,6 +12,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -21,10 +23,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
 import com.vaulti.app.data.crypto.CryptoManager
 import com.vaulti.app.ui.components.VaultiBottomNavBar
 import com.vaulti.app.ui.screens.*
@@ -127,22 +129,7 @@ fun VaultiMainScreen(
         }
     }
 
-    val googleSignInLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        try {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            val account = task.getResult(ApiException::class.java)
-            val idToken = account?.idToken
-            if (idToken != null) {
-                authViewModel.signInWithGoogle(idToken)
-            } else {
-                authViewModel.reportGoogleSignInError("Google Sign-In failed. Try again or use email/password.")
-            }
-        } catch (e: ApiException) {
-            authViewModel.reportGoogleSignInError("Google Sign-In failed. Try again or use email/password.")
-        }
-    }
+    val scope = rememberCoroutineScope()
 
     Scaffold { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
@@ -158,12 +145,40 @@ fun VaultiMainScreen(
                     onLoginSuccess = { /* LaunchedEffect handles navigation */ },
                     onNavigateToRegister = { navController.navigate("register") },
                     onGoogleSignInRequest = {
-                        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                            .requestIdToken(BuildConfig.GOOGLE_WEB_CLIENT_ID)
-                            .requestEmail()
-                            .build()
-                        val client = GoogleSignIn.getClient(context, gso)
-                        googleSignInLauncher.launch(client.signInIntent)
+                        scope.launch {
+                            try {
+                                val credentialManager = CredentialManager.create(context)
+                                val googleIdOption = GetGoogleIdOption.Builder()
+                                    .setServerClientId(BuildConfig.GOOGLE_WEB_CLIENT_ID)
+                                    .setFilterByAuthorizedAccounts(false)
+                                    .setAutoSelectEnabled(false)
+                                    .build()
+                                val request = GetCredentialRequest.Builder()
+                                    .addCredentialOption(googleIdOption)
+                                    .build()
+                                val result = credentialManager.getCredential(
+                                    context, request
+                                )
+                                val credential = result.credential
+                                if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                                    val googleIdTokenCredential = GoogleIdTokenCredential
+                                        .createFrom(credential.data)
+                                    authViewModel.signInWithGoogle(
+                                        googleIdTokenCredential.idToken
+                                    )
+                                } else {
+                                    authViewModel.reportGoogleSignInError(
+                                        "Google Sign-In failed"
+                                    )
+                                }
+                            } catch (_: GetCredentialCancellationException) {
+                                // User cancelled the sign-in flow
+                            } catch (_: GetCredentialException) {
+                                authViewModel.reportGoogleSignInError(
+                                    "Google Sign-In failed. Try again or use email/password."
+                                )
+                            }
+                        }
                     }
                 )
             }
