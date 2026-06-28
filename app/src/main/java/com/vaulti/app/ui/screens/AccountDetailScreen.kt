@@ -121,7 +121,8 @@ fun AccountDetailScreen(
                     }
                 }
             )
-        }
+        },
+        contentWindowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top)
     ) { padding ->
         val listState = rememberLazyListState()
         LaunchedEffect(Unit) { listState.scrollToItem(0) }
@@ -131,7 +132,7 @@ fun AccountDetailScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (account != null) {
