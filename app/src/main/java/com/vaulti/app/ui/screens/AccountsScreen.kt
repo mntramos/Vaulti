@@ -66,6 +66,7 @@ fun AccountsScreen(
                 Icon(Icons.Filled.Add, contentDescription = "Add Account")
             }
         },
+        contentWindowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Top)
     ) { padding ->
         Box(Modifier.padding(padding)) {
         val listState = rememberLazyListState()
@@ -74,7 +75,7 @@ fun AccountsScreen(
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item {
