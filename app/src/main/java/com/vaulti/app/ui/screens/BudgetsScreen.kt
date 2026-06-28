@@ -228,7 +228,7 @@ private fun BudgetCard(budget: Budget, onDelete: (Budget) -> Unit = {}, onEdit: 
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = if (isOverBudget) MaterialTheme.colorScheme.errorContainer
-            else MaterialTheme.colorScheme.surface
+            else MaterialTheme.colorScheme.surfaceVariant
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
