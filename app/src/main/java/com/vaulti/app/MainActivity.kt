@@ -6,8 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.layout.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.unit.dp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -131,7 +129,21 @@ fun VaultiMainScreen(
 
     val scope = rememberCoroutineScope()
 
-    Scaffold { innerPadding ->
+    Scaffold(
+        bottomBar = {
+            if (showBottomBar) {
+                VaultiBottomNavBar(
+                    currentRoute = currentRoute,
+                    onItemSelected = { item ->
+                        navController.navigate(item.route) {
+                            popUpTo("dashboard") { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+        }
+    ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
             NavHost(
                 navController = navController,
@@ -345,21 +357,6 @@ fun VaultiMainScreen(
                 )
             }
         }
-
-            if (showBottomBar) {
-                VaultiBottomNavBar(
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                    currentRoute = currentRoute,
-                    onItemSelected = { item ->
-                        navController.navigate(item.route) {
-                            popUpTo("dashboard") {
-                                inclusive = false
-                            }
-                            launchSingleTop = true
-                        }
-                    }
-                )
-            }
         }
     }
 
