@@ -1,5 +1,6 @@
 package com.vaulti.app.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -311,25 +312,24 @@ private fun GoalCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .background(Color(goal.color))
+            )
+            Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(
-                        modifier = Modifier.size(12.dp),
-                        shape = MaterialTheme.shapes.extraSmall,
-                        color = Color(goal.color)
-                    ) {}
-                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = goal.name,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium
                     )
-                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (goal.targetDate != null) {
                         Text(
@@ -417,6 +417,7 @@ private fun GoalCard(
                         Text("Contribute", style = MaterialTheme.typography.bodySmall)
                     }
                 }
+            }
             }
         }
     }
