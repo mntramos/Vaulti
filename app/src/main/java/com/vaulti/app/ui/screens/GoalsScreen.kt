@@ -22,6 +22,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import com.vaulti.app.data.database.entity.Goal
+import com.vaulti.app.ui.components.ColorPicker
 import com.vaulti.app.ui.FormatUtils
 import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.viewmodel.GoalViewModel
@@ -436,6 +437,7 @@ private fun AddGoalDialog(
     var hasTargetDate by remember { mutableStateOf(initial?.targetDate != null) }
     var targetDate by remember { mutableLongStateOf(initial?.targetDate ?: System.currentTimeMillis()) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var selectedColor by remember { mutableStateOf(initial?.color ?: 0xFF6C63FFL) }
     val dateFormat = DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.getDefault())
     val isEditing = initial != null
 
@@ -488,6 +490,11 @@ private fun AddGoalDialog(
                         )
                     }
                 }
+                Spacer(modifier = Modifier.height(4.dp))
+                ColorPicker(
+                    selectedColor = selectedColor,
+                    onColorSelected = { selectedColor = it }
+                )
             }
         },
         confirmButton = {
@@ -495,7 +502,7 @@ private fun AddGoalDialog(
                 onClick = {
                     val amountValue = targetAmount.toDoubleOrNull() ?: return@TextButton
                     if (amountValue <= 0) return@TextButton
-                    onConfirm(name, amountValue, if (hasTargetDate) targetDate else null, 0xFF6C63FF)
+                    onConfirm(name, amountValue, if (hasTargetDate) targetDate else null, selectedColor)
                 },
                 enabled = name.isNotBlank() && targetAmount.isNotBlank()
             ) {
