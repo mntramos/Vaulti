@@ -4,6 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -15,6 +19,7 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -135,9 +140,14 @@ fun VaultiMainScreen(
                 VaultiBottomNavBar(
                     currentRoute = currentRoute,
                     onItemSelected = { item ->
-                        navController.navigate(item.route) {
-                            popUpTo("dashboard") { inclusive = false }
-                            launchSingleTop = true
+                        if (navController.currentDestination?.route != item.route) {
+                            navController.navigate(item.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
                     }
                 )
@@ -148,7 +158,33 @@ fun VaultiMainScreen(
             NavHost(
                 navController = navController,
                 startDestination = startDestination,
-                modifier = Modifier.matchParentSize()
+                modifier = Modifier.matchParentSize(),
+                enterTransition = {
+                    val targetIndex = targetState.destination.route?.let { mainRoutes.indexOf(it) } ?: -1
+                    val initialIndex = initialState.destination.route?.let { mainRoutes.indexOf(it) } ?: -1
+                    val leftwards = initialIndex != -1 && targetIndex != -1 && targetIndex < initialIndex
+                    slideInHorizontally(initialOffsetX = { if (leftwards) -it else it }) + fadeIn()
+                },
+                exitTransition = {
+                    val targetIndex = targetState.destination.route?.let { mainRoutes.indexOf(it) } ?: -1
+                    val initialIndex = initialState.destination.route?.let { mainRoutes.indexOf(it) } ?: -1
+                    val leftwards = initialIndex != -1 && targetIndex != -1 && targetIndex < initialIndex
+                    slideOutHorizontally(targetOffsetX = { if (leftwards) it else -it }) + fadeOut()
+                },
+                popEnterTransition = {
+                    val targetIndex = targetState.destination.route?.let { mainRoutes.indexOf(it) } ?: -1
+                    val initialIndex = initialState.destination.route?.let { mainRoutes.indexOf(it) } ?: -1
+                    val leftwards = initialIndex != -1 && targetIndex != -1 && targetIndex < initialIndex
+                    val standardBack = initialIndex == -1
+                    slideInHorizontally(initialOffsetX = { if (leftwards || standardBack) -it else it }) + fadeIn()
+                },
+                popExitTransition = {
+                    val targetIndex = targetState.destination.route?.let { mainRoutes.indexOf(it) } ?: -1
+                    val initialIndex = initialState.destination.route?.let { mainRoutes.indexOf(it) } ?: -1
+                    val leftwards = initialIndex != -1 && targetIndex != -1 && targetIndex < initialIndex
+                    val standardBack = initialIndex == -1
+                    slideOutHorizontally(targetOffsetX = { if (leftwards || standardBack) it else -it }) + fadeOut()
+                }
             ) {
             composable("login") {
                 val context = LocalContext.current
