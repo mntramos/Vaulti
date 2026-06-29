@@ -1,5 +1,6 @@
 package com.vaulti.app.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -233,25 +234,24 @@ private fun BudgetCard(budget: Budget, onDelete: (Budget) -> Unit = {}, onEdit: 
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+                    .background(Color(budget.color))
+            )
+            Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Surface(
-                        modifier = Modifier.size(12.dp),
-                        shape = MaterialTheme.shapes.extraSmall,
-                        color = Color(budget.color)
-                    ) {}
-                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = budget.name,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium
                     )
-                }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = budget.period.name.lowercase().replaceFirstChar { it.uppercase() },
@@ -306,6 +306,7 @@ private fun BudgetCard(budget: Budget, onDelete: (Budget) -> Unit = {}, onEdit: 
                     color = MaterialTheme.colorScheme.error,
                     fontWeight = FontWeight.SemiBold
                 )
+            }
             }
         }
     }
