@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.vaulti.app.data.database.entity.Budget
 import com.vaulti.app.data.database.entity.BudgetPeriod
+import com.vaulti.app.ui.components.ColorPicker
 import com.vaulti.app.ui.FormatUtils
 import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.viewmodel.BudgetViewModel
@@ -323,6 +324,7 @@ private fun AddBudgetDialog(
     var amount by remember { mutableStateOf(if (initial != null) FormatUtils.formatAmountForEdit(initial.amount) else "") }
     var selectedPeriod by remember { mutableStateOf(initial?.period ?: BudgetPeriod.MONTHLY) }
     var showPeriodDropdown by remember { mutableStateOf(false) }
+    var selectedColor by remember { mutableStateOf(initial?.color ?: 0xFF6C63FFL) }
     val isEditing = initial != null
 
     AlertDialog(
@@ -375,6 +377,11 @@ private fun AddBudgetDialog(
                         }
                     }
                 }
+                Spacer(modifier = Modifier.height(4.dp))
+                ColorPicker(
+                    selectedColor = selectedColor,
+                    onColorSelected = { selectedColor = it }
+                )
             }
         },
         confirmButton = {
@@ -382,7 +389,7 @@ private fun AddBudgetDialog(
                 onClick = {
                     val amountValue = amount.toDoubleOrNull() ?: return@TextButton
                     if (amountValue <= 0) return@TextButton
-                    onConfirm(name, amountValue, selectedPeriod, 0xFF6C63FF)
+                    onConfirm(name, amountValue, selectedPeriod, selectedColor)
                 },
                 enabled = name.isNotBlank() && amount.isNotBlank()
             ) {
