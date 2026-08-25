@@ -443,7 +443,11 @@ private fun AddGoalSheet(
     val dateFormat = DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.getDefault())
     val isEditing = initial != null
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()

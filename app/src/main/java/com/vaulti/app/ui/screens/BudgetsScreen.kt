@@ -330,7 +330,11 @@ private fun AddBudgetSheet(
     var selectedColor by remember { mutableStateOf(initial?.color ?: 0xFF6C63FFL) }
     val isEditing = initial != null
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
