@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
@@ -213,7 +215,7 @@ fun GoalsScreen(
     }
 
     if (showAddDialog) {
-        AddGoalDialog(
+        AddGoalSheet(
             onDismiss = { showAddDialog = false },
             onConfirm = { name, targetAmount, targetDate, color ->
                 viewModel.addGoal(name, targetAmount, targetDate, color)
@@ -224,7 +226,7 @@ fun GoalsScreen(
     }
 
     showEditDialog?.let { goal ->
-        AddGoalDialog(
+        AddGoalSheet(
             initial = goal,
             onDismiss = { showEditDialog = null },
             onConfirm = { name, targetAmount, targetDate, color ->
@@ -426,7 +428,7 @@ private fun GoalCard(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddGoalDialog(
+private fun AddGoalSheet(
     initial: Goal? = null,
     onDismiss: () -> Unit,
     onConfirm: (String, Double, Long?, Long) -> Unit,
@@ -441,80 +443,92 @@ private fun AddGoalDialog(
     val dateFormat = DateTimeFormatter.ofPattern("MMM dd, yyyy", Locale.getDefault())
     val isEditing = initial != null
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(if (isEditing) "Edit Goal" else "Add Goal") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Goal Name") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = if (isEditing) "Edit Goal" else "Add Goal",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
 
-                OutlinedTextField(
-                    value = targetAmount,
-                    onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) targetAmount = it },
-                    label = { Text("Target Amount") },
-                    prefix = { Text(FormatUtils.currencySymbol(currency)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth()
-                )
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Goal Name") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Set target date")
-                    Switch(
-                        checked = hasTargetDate,
-                        onCheckedChange = { hasTargetDate = it }
+            OutlinedTextField(
+                value = targetAmount,
+                onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) targetAmount = it },
+                label = { Text("Target Amount") },
+                prefix = { Text(FormatUtils.currencySymbol(currency)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Set target date")
+                Switch(
+                    checked = hasTargetDate,
+                    onCheckedChange = { hasTargetDate = it }
+                )
+            }
+
+            if (hasTargetDate) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = Instant.ofEpochMilli(targetDate).atZone(ZoneId.systemDefault()).format(dateFormat),
+                        onValueChange = {},
+                        label = { Text("Target Date") },
+                        readOnly = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { showDatePicker = true }
                     )
                 }
+            }
 
-                if (hasTargetDate) {
-                    Box(modifier = Modifier.fillMaxWidth()) {
-                        OutlinedTextField(
-                            value = Instant.ofEpochMilli(targetDate).atZone(ZoneId.systemDefault()).format(dateFormat),
-                            onValueChange = {},
-                            label = { Text("Target Date") },
-                            readOnly = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clickable { showDatePicker = true }
-                        )
-                    }
+            ColorPicker(
+                selectedColor = selectedColor,
+                onColorSelected = { selectedColor = it }
+            )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Cancel")
                 }
-                Spacer(modifier = Modifier.height(4.dp))
-                ColorPicker(
-                    selectedColor = selectedColor,
-                    onColorSelected = { selectedColor = it }
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val amountValue = targetAmount.toDoubleOrNull() ?: return@TextButton
-                    if (amountValue <= 0) return@TextButton
-                    onConfirm(name, amountValue, if (hasTargetDate) targetDate else null, selectedColor)
-                },
-                enabled = name.isNotBlank() && targetAmount.isNotBlank()
-            ) {
-                Text(if (isEditing) "Save" else "Add")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Button(
+                    onClick = {
+                        val amountValue = targetAmount.toDoubleOrNull() ?: return@Button
+                        if (amountValue <= 0) return@Button
+                        onConfirm(name, amountValue, if (hasTargetDate) targetDate else null, selectedColor)
+                    },
+                    enabled = name.isNotBlank() && targetAmount.isNotBlank(),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(if (isEditing) "Save" else "Add")
+                }
             }
         }
-    )
+    }
 
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState(initialSelectedDateMillis = targetDate)
