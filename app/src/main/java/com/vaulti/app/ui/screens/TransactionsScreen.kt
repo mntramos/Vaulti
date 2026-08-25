@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.data.database.entity.TransactionType
 import com.vaulti.app.ui.FormatUtils
@@ -388,9 +389,22 @@ fun TransactionsScreen(
                 TextButton(onClick = { showDatePicker = false }) {
                     Text("Cancel")
                 }
-            }
+            },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
-            DateRangePicker(state = datePickerState)
+            DateRangePicker(
+                state = datePickerState,
+                title = {
+                    Text(
+                        text = "Select dates",
+                        style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(start = 24.dp, top = 16.dp)
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 600.dp)
+            )
         }
     }
 
