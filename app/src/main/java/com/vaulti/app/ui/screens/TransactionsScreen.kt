@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
@@ -53,6 +54,7 @@ fun TransactionsScreen(
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var dateRange by remember { mutableStateOf<Pair<Long, Long>?>(null) }
     var showDatePicker by remember { mutableStateOf(false) }
+    val rangeFormatter = remember { DateTimeFormatter.ofPattern("MMM dd", Locale.getDefault()) }
 
     val pageSize = appPreferences.transactionsPageSize
 
@@ -203,7 +205,39 @@ fun TransactionsScreen(
                                         onClick = { sortOrder = SortOrder.AMOUNT_ASC; showSortMenu = false; appPreferences.transactionsSort = SortOrder.AMOUNT_ASC.name; resetPaging() },
                                         leadingIcon = if (sortOrder == SortOrder.AMOUNT_ASC) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
                                     )
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                text = if (dateRange != null) {
+                                                    val (s, e) = dateRange!!
+                                                    "Custom: ${Instant.ofEpochMilli(s).atZone(ZoneId.systemDefault()).format(rangeFormatter)} – ${Instant.ofEpochMilli(e).atZone(ZoneId.systemDefault()).format(rangeFormatter)}"
+                                                } else "Custom date range…",
+                                                fontWeight = if (dateRange != null) FontWeight.Bold else FontWeight.Normal
+                                            )
+                                        },
+                                        onClick = { showSortMenu = false; showDatePicker = true },
+                                        leadingIcon = if (dateRange != null) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
+                                    )
                                 }
+                            }
+                        }
+                    }
+                    dateRange?.let { (s, e) ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "${Instant.ofEpochMilli(s).atZone(ZoneId.systemDefault()).format(rangeFormatter)} – ${Instant.ofEpochMilli(e).atZone(ZoneId.systemDefault()).format(rangeFormatter)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            IconButton(
+                                onClick = { dateRange = null; resetPaging() },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(Icons.Filled.Close, contentDescription = "Clear date filter", modifier = Modifier.size(16.dp))
                             }
                         }
                     }
@@ -249,20 +283,6 @@ fun TransactionsScreen(
                                 leadingIcon = if (selectedFilterType == type) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
                             )
                         }
-                        val rangeFormatter = remember { DateTimeFormatter.ofPattern("MMM dd", Locale.getDefault()) }
-                        FilterChip(
-                            selected = dateRange != null,
-                            onClick = { showDatePicker = true },
-                            label = {
-                                Text(
-                                    text = if (dateRange != null) {
-                                        val (s, e) = dateRange!!
-                                        "${Instant.ofEpochMilli(s).atZone(ZoneId.systemDefault()).format(rangeFormatter)} – ${Instant.ofEpochMilli(e).atZone(ZoneId.systemDefault()).format(rangeFormatter)}"
-                                    } else "Dates",
-                                    fontWeight = if (dateRange != null) FontWeight.Bold else FontWeight.Normal
-                                )
-                            }
-                        )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                 }
