@@ -26,6 +26,12 @@ import com.vaulti.app.ui.FormatUtils
 import com.vaulti.app.ui.components.TransactionItem
 import com.vaulti.app.ui.theme.AppPreferences
 import com.vaulti.app.viewmodel.TransactionViewModel
+import java.time.Instant
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionsScreen(
@@ -45,6 +51,8 @@ fun TransactionsScreen(
     var visibleCount by remember { mutableIntStateOf(appPreferences.transactionsPageSize) }
     var selectedIds by remember { mutableStateOf(setOf<Long>()) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    var dateRange by remember { mutableStateOf<Pair<Long, Long>?>(null) }
+    var showDatePicker by remember { mutableStateOf(false) }
 
     val pageSize = appPreferences.transactionsPageSize
 
@@ -52,17 +60,23 @@ fun TransactionsScreen(
         viewModel.setSearchQuery(searchText)
     }
 
-    val transactions = remember(allTransactions, selectedFilterType, sortOrder) {
+    val transactions = remember(allTransactions, selectedFilterType, sortOrder, dateRange) {
         val filtered = if (selectedFilterType != null) {
             allTransactions.filter { it.type == selectedFilterType }
         } else {
             allTransactions
         }
+        val dateFiltered = if (dateRange != null) {
+            val (start, end) = dateRange!!
+            filtered.filter { it.date >= start && it.date <= end }
+        } else {
+            filtered
+        }
         when (sortOrder) {
-            SortOrder.DATE_DESC -> filtered.sortedByDescending { it.date }
-            SortOrder.DATE_ASC -> filtered.sortedBy { it.date }
-            SortOrder.AMOUNT_DESC -> filtered.sortedByDescending { it.amount }
-            SortOrder.AMOUNT_ASC -> filtered.sortedBy { it.amount }
+            SortOrder.DATE_DESC -> dateFiltered.sortedByDescending { it.date }
+            SortOrder.DATE_ASC -> dateFiltered.sortedBy { it.date }
+            SortOrder.AMOUNT_DESC -> dateFiltered.sortedByDescending { it.amount }
+            SortOrder.AMOUNT_ASC -> dateFiltered.sortedBy { it.amount }
         }
     }
 
@@ -235,6 +249,20 @@ fun TransactionsScreen(
                                 leadingIcon = if (selectedFilterType == type) {{ Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }} else null
                             )
                         }
+                        val rangeFormatter = remember { DateTimeFormatter.ofPattern("MMM dd", Locale.getDefault()) }
+                        FilterChip(
+                            selected = dateRange != null,
+                            onClick = { showDatePicker = true },
+                            label = {
+                                Text(
+                                    text = if (dateRange != null) {
+                                        val (s, e) = dateRange!!
+                                        "${Instant.ofEpochMilli(s).atZone(ZoneId.systemDefault()).format(rangeFormatter)} – ${Instant.ofEpochMilli(e).atZone(ZoneId.systemDefault()).format(rangeFormatter)}"
+                                    } else "Dates",
+                                    fontWeight = if (dateRange != null) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        )
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                 }
@@ -308,6 +336,41 @@ fun TransactionsScreen(
             }
         }
         }
+        }
+    }
+
+    if (showDatePicker) {
+        val datePickerState = rememberDateRangePickerState(
+            initialSelectedStartDateMillis = dateRange?.first,
+            initialSelectedEndDateMillis = dateRange?.second
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                val startUtc = datePickerState.selectedStartDateMillis
+                val endUtc = datePickerState.selectedEndDateMillis
+                TextButton(
+                    enabled = startUtc != null && endUtc != null,
+                    onClick = {
+                        val startDate = Instant.ofEpochMilli(startUtc!!).atZone(ZoneOffset.UTC).toLocalDate()
+                            .atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                        val endDate = Instant.ofEpochMilli(endUtc!!).atZone(ZoneOffset.UTC).toLocalDate()
+                            .atTime(LocalTime.MAX).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                        dateRange = startDate to endDate
+                        resetPaging()
+                        showDatePicker = false
+                    }
+                ) {
+                    Text("Apply")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DateRangePicker(state = datePickerState)
         }
     }
 
