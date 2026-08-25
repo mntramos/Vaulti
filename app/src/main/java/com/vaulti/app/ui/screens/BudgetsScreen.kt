@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material.icons.Icons
@@ -174,7 +176,7 @@ fun BudgetsScreen(
     }
 
     if (showAddDialog) {
-        AddBudgetDialog(
+        AddBudgetSheet(
             onDismiss = { showAddDialog = false },
             onConfirm = { name, amount, period, color ->
                 viewModel.addBudget(name, amount, period, color)
@@ -185,7 +187,7 @@ fun BudgetsScreen(
     }
 
     showEditDialog?.let { budget ->
-        AddBudgetDialog(
+        AddBudgetSheet(
             initial = budget,
             onDismiss = { showEditDialog = null },
             onConfirm = { name, amount, period, color ->
@@ -315,7 +317,7 @@ private fun BudgetCard(budget: Budget, onDelete: (Budget) -> Unit = {}, onEdit: 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AddBudgetDialog(
+private fun AddBudgetSheet(
     initial: Budget? = null,
     onDismiss: () -> Unit,
     onConfirm: (String, Double, BudgetPeriod, Long) -> Unit,
@@ -328,79 +330,95 @@ private fun AddBudgetDialog(
     var selectedColor by remember { mutableStateOf(initial?.color ?: 0xFF6C63FFL) }
     val isEditing = initial != null
 
-    AlertDialog(
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(
         onDismissRequest = onDismiss,
-        title = { Text(if (isEditing) "Edit Budget" else "Add Budget") },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Budget Name") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+        sheetState = sheetState
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = if (isEditing) "Edit Budget" else "Add Budget",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
 
-                OutlinedTextField(
-                    value = amount,
-                    onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) amount = it },
-                    label = { Text("Budget Amount") },
-                    prefix = { Text(FormatUtils.currencySymbol(currency)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    modifier = Modifier.fillMaxWidth()
-                )
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Budget Name") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
-                ExposedDropdownMenuBox(
+            OutlinedTextField(
+                value = amount,
+                onValueChange = { if (it.all { c -> c.isDigit() || c == '.' }) amount = it },
+                label = { Text("Budget Amount") },
+                prefix = { Text(FormatUtils.currencySymbol(currency)) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            ExposedDropdownMenuBox(
+                expanded = showPeriodDropdown,
+                onExpandedChange = { showPeriodDropdown = it }
+            ) {
+                OutlinedTextField(
+                    value = selectedPeriod.name.lowercase().replaceFirstChar { it.uppercase() },
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Period") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showPeriodDropdown) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
+                )
+                ExposedDropdownMenu(
                     expanded = showPeriodDropdown,
-                    onExpandedChange = { showPeriodDropdown = it }
+                    onDismissRequest = { showPeriodDropdown = false }
                 ) {
-                    OutlinedTextField(
-                        value = selectedPeriod.name.lowercase().replaceFirstChar { it.uppercase() },
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Period") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showPeriodDropdown) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
-                    )
-                    ExposedDropdownMenu(
-                        expanded = showPeriodDropdown,
-                        onDismissRequest = { showPeriodDropdown = false }
-                    ) {
-                        BudgetPeriod.entries.forEach { period ->
-                            DropdownMenuItem(
-                                text = { Text(period.name.lowercase().replaceFirstChar { it.uppercase() }) },
-                                onClick = {
-                                    selectedPeriod = period
-                                    showPeriodDropdown = false
-                                }
-                            )
-                        }
+                    BudgetPeriod.entries.forEach { period ->
+                        DropdownMenuItem(
+                            text = { Text(period.name.lowercase().replaceFirstChar { it.uppercase() }) },
+                            onClick = {
+                                selectedPeriod = period
+                                showPeriodDropdown = false
+                            }
+                        )
                     }
                 }
-                Spacer(modifier = Modifier.height(4.dp))
-                ColorPicker(
-                    selectedColor = selectedColor,
-                    onColorSelected = { selectedColor = it }
-                )
             }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val amountValue = amount.toDoubleOrNull() ?: return@TextButton
-                    if (amountValue <= 0) return@TextButton
-                    onConfirm(name, amountValue, selectedPeriod, selectedColor)
-                },
-                enabled = name.isNotBlank() && amount.isNotBlank()
-            ) {
-                Text(if (isEditing) "Save" else "Add")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
+
+            ColorPicker(
+                selectedColor = selectedColor,
+                onColorSelected = { selectedColor = it }
+            )
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Cancel")
+                }
+                Button(
+                    onClick = {
+                        val amountValue = amount.toDoubleOrNull() ?: return@Button
+                        if (amountValue <= 0) return@Button
+                        onConfirm(name, amountValue, selectedPeriod, selectedColor)
+                    },
+                    enabled = name.isNotBlank() && amount.isNotBlank(),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(if (isEditing) "Save" else "Add")
+                }
             }
         }
-    )
+    }
 }
