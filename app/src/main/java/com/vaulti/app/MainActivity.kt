@@ -19,7 +19,6 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -134,22 +133,22 @@ fun VaultiMainScreen(
 
     val scope = rememberCoroutineScope()
 
+    val navigateToTab: (String) -> Unit = { route ->
+        if (navController.currentDestination?.route != route) {
+            navController.navigate(route) {
+                popUpTo(0) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+
     Scaffold(
         bottomBar = {
             if (showBottomBar) {
                 VaultiBottomNavBar(
                     currentRoute = currentRoute,
-                    onItemSelected = { item ->
-                        if (navController.currentDestination?.route != item.route) {
-                            navController.navigate(item.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    }
+                    onItemSelected = { item -> navigateToTab(item.route) }
                 )
             }
         }
@@ -276,8 +275,8 @@ fun VaultiMainScreen(
                     onAccountClick = { account ->
                         navController.navigate("account_detail/${account.id}")
                     },
-                    onSeeAllTransactions = { navController.navigate("transactions") },
-                    onSeeAllAccounts = { navController.navigate("accounts") },
+                    onSeeAllTransactions = { navigateToTab("transactions") },
+                    onSeeAllAccounts = { navigateToTab("accounts") },
                     onSettingsClick = { navController.navigate("settings") }
                 )
             }

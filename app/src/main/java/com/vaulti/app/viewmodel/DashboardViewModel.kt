@@ -11,10 +11,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.math.abs
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
@@ -58,14 +61,21 @@ class DashboardViewModel @Inject constructor(
         .map { list -> list.groupBy({ it.cId }, { it.lastDate }).mapValues { (_, dates) -> dates.max() } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
-    private val now = LocalDate.now()
-    private val startOfMonth = now.withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-    private val startOfNextMonth = now.plusMonths(1).withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    private fun monthWindowFlow(): Flow<Pair<Long, Long>> = flow {
+        while (true) {
+            val now = LocalDate.now()
+            val start = now.withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val end = now.plusMonths(1).withDayOfMonth(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            emit(start to end)
+            delay((end - System.currentTimeMillis()).coerceAtLeast(0L) + 1000L)
+        }
+    }
 
-    val monthlyExpense: StateFlow<Double> = transactionRepository.getCurrentMonthExpense(startOfMonth, startOfNextMonth)
+    val monthlyExpense: StateFlow<Double> = monthWindowFlow()
+        .flatMapLatest { (start, end) -> transactionRepository.getCurrentMonthExpense(start, end) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
-    val monthlyIncome: StateFlow<Double> = transactionRepository.getCurrentMonthIncome(startOfMonth, startOfNextMonth)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+    val monthlyIncome: StateFlow<Double> = monthWindowFlow()
+        .flatMapLatest { (start, end) -> transactionRepository.getCurrentMonthIncome(start, end) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 }
