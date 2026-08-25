@@ -297,7 +297,11 @@ fun TransactionsScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "No transactions matching \"$searchText\"",
+                                text = when {
+                                    searchText.isBlank() && selectedFilterType == null && dateRange == null -> "No transactions yet"
+                                    searchText.isBlank() -> "No transactions matching the selected filters"
+                                    else -> "No transactions matching \"$searchText\""
+                                },
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -399,6 +403,32 @@ fun TransactionsScreen(
                         text = "Select dates",
                         style = MaterialTheme.typography.labelLarge,
                         modifier = Modifier.padding(start = 24.dp, top = 16.dp)
+                    )
+                },
+                headline = {
+                    val startMillis = datePickerState.selectedStartDateMillis
+                    val endMillis = datePickerState.selectedEndDateMillis
+                    val zone = ZoneId.systemDefault()
+                    val shortFmt = DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())
+                    val fullFmt = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.getDefault())
+                    val text = when {
+                        startMillis == null -> "Select dates"
+                        endMillis == null -> Instant.ofEpochMilli(startMillis).atZone(zone).format(fullFmt)
+                        else -> {
+                            val start = Instant.ofEpochMilli(startMillis).atZone(zone).toLocalDate()
+                            val end = Instant.ofEpochMilli(endMillis).atZone(zone).toLocalDate()
+                            if (start.year == end.year) {
+                                "${start.format(shortFmt)} – ${end.format(shortFmt)}, ${start.year}"
+                            } else {
+                                "${start.format(fullFmt)} – ${end.format(fullFmt)}"
+                            }
+                        }
+                    }
+                    Text(
+                        text = text,
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        modifier = Modifier.padding(start = 24.dp)
                     )
                 },
                 modifier = Modifier
