@@ -419,6 +419,7 @@ class SyncManager @Inject constructor(
                 },
                 imagePath = this["imagePath"] as? String,
                 budgetId = (this["budgetId"] as? Number)?.toLong(),
+                isExcludedFromTotals = this["isExcludedFromTotals"] as? Boolean ?: false,
                 createdAt = (this["createdAt"] as? Number)?.toLong() ?: System.currentTimeMillis(),
                 lastModified = (this["lastModified"] as? Number)?.toLong() ?: System.currentTimeMillis()
             )
@@ -534,6 +535,7 @@ private fun Transaction.toSecureMap(crypto: CryptoManager, uid: String): Map<Str
         "recurringInterval" to recurringInterval?.name,
         "imagePath" to imagePath,
         "budgetId" to budgetId,
+        "isExcludedFromTotals" to isExcludedFromTotals,
         "createdAt" to createdAt,
         "lastModified" to lastModified
     )
@@ -604,6 +606,7 @@ private fun Transaction.toMap(): Map<String, Any?> = mapOf(
     "recurringInterval" to recurringInterval?.name,
     "imagePath" to imagePath,
     "budgetId" to budgetId,
+    "isExcludedFromTotals" to isExcludedFromTotals,
     "createdAt" to createdAt,
     "lastModified" to lastModified
 )

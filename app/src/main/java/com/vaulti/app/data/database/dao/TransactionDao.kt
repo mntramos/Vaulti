@@ -26,16 +26,16 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE accountId = :accountId AND date >= :start AND date <= :end ORDER BY date DESC")
     fun getByAccountAndDateRange(accountId: Long, start: Long, end: Long): Flow<List<Transaction>>
 
-    @Query("SELECT SUM(amount) FROM transactions WHERE type = 'EXPENSE' AND date BETWEEN :start AND :end")
+    @Query("SELECT SUM(amount) FROM transactions WHERE type = 'EXPENSE' AND isExcludedFromTotals = 0 AND date BETWEEN :start AND :end")
     fun getTotalExpense(start: Long, end: Long): Flow<Double?>
 
-    @Query("SELECT SUM(amount) FROM transactions WHERE type = 'INCOME' AND date BETWEEN :start AND :end")
+    @Query("SELECT SUM(amount) FROM transactions WHERE type = 'INCOME' AND isExcludedFromTotals = 0 AND date BETWEEN :start AND :end")
     fun getTotalIncome(start: Long, end: Long): Flow<Double?>
 
-    @Query("SELECT SUM(amount) FROM transactions WHERE type = 'EXPENSE' AND date >= :startOfMonth AND date < :startOfNextMonth")
+    @Query("SELECT SUM(amount) FROM transactions WHERE type = 'EXPENSE' AND isExcludedFromTotals = 0 AND date >= :startOfMonth AND date < :startOfNextMonth")
     fun getCurrentMonthExpense(startOfMonth: Long, startOfNextMonth: Long): Flow<Double?>
 
-    @Query("SELECT SUM(amount) FROM transactions WHERE type = 'INCOME' AND date >= :startOfMonth AND date < :startOfNextMonth")
+    @Query("SELECT SUM(amount) FROM transactions WHERE type = 'INCOME' AND isExcludedFromTotals = 0 AND date >= :startOfMonth AND date < :startOfNextMonth")
     fun getCurrentMonthIncome(startOfMonth: Long, startOfNextMonth: Long): Flow<Double?>
 
     @Query("SELECT * FROM transactions ORDER BY date DESC LIMIT :limit")
