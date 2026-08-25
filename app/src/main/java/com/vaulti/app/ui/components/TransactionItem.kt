@@ -127,6 +127,14 @@ fun TransactionItem(
                     color = amountColor,
                     maxLines = 1
                 )
+                if (transaction.isExcludedFromTotals) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "not counted",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }

@@ -137,7 +137,8 @@ class TransactionViewModel @Inject constructor(
         note: String = "",
         date: Long = System.currentTimeMillis(),
         toAccountId: Long? = null,
-        budgetId: Long? = null
+        budgetId: Long? = null,
+        isExcludedFromTotals: Boolean = false
     ) {
         viewModelScope.launch {
             val transaction = Transaction(
@@ -148,14 +149,15 @@ class TransactionViewModel @Inject constructor(
                 category = category,
                 note = note,
                 date = date,
-                budgetId = budgetId
+                budgetId = budgetId,
+                isExcludedFromTotals = isExcludedFromTotals
             )
             transactionRepository.insert(transaction)
 
             when (type) {
                 TransactionType.EXPENSE -> {
                     accountRepository.updateBalance(accountId, -amount)
-                    updateBudgetSpent(budgetId, amount)
+                    if (!isExcludedFromTotals) updateBudgetSpent(budgetId, amount)
                 }
                 TransactionType.INCOME -> {
                     accountRepository.updateBalance(accountId, amount)
@@ -178,7 +180,8 @@ class TransactionViewModel @Inject constructor(
         note: String,
         date: Long,
         toAccountId: Long? = null,
-        budgetId: Long? = null
+        budgetId: Long? = null,
+        isExcludedFromTotals: Boolean = false
     ) {
         viewModelScope.launch {
             val oldAmount = transaction.amount
@@ -186,6 +189,7 @@ class TransactionViewModel @Inject constructor(
             val oldAccountId = transaction.accountId
             val oldToAccountId = transaction.toAccountId
             val oldBudgetId = transaction.budgetId
+            val oldExcluded = transaction.isExcludedFromTotals
 
             val updated = transaction.copy(
                 accountId = accountId,
@@ -195,19 +199,20 @@ class TransactionViewModel @Inject constructor(
                 category = category,
                 note = note,
                 date = date,
-                budgetId = budgetId
+                budgetId = budgetId,
+                isExcludedFromTotals = isExcludedFromTotals
             )
             transactionRepository.update(updated)
 
             reverseTransaction(oldAccountId, oldToAccountId, oldAmount, oldType)
-            if (oldType == TransactionType.EXPENSE) {
+            if (oldType == TransactionType.EXPENSE && !oldExcluded) {
                 updateBudgetSpent(oldBudgetId, -oldAmount)
             }
 
             when (type) {
                 TransactionType.EXPENSE -> {
                     accountRepository.updateBalance(accountId, -amount)
-                    updateBudgetSpent(budgetId, amount)
+                    if (!isExcludedFromTotals) updateBudgetSpent(budgetId, amount)
                 }
                 TransactionType.INCOME -> accountRepository.updateBalance(accountId, amount)
                 TransactionType.TRANSFER -> {
@@ -241,7 +246,7 @@ class TransactionViewModel @Inject constructor(
         viewModelScope.launch {
             transactionRepository.delete(transaction)
             reverseTransaction(transaction.accountId, transaction.toAccountId, transaction.amount, transaction.type)
-            if (transaction.type == TransactionType.EXPENSE) {
+            if (transaction.type == TransactionType.EXPENSE && !transaction.isExcludedFromTotals) {
                 updateBudgetSpent(transaction.budgetId, -transaction.amount)
             }
         }
@@ -252,7 +257,7 @@ class TransactionViewModel @Inject constructor(
             val transaction = transactionRepository.getById(transactionId) ?: return@launch
             transactionRepository.delete(transaction)
             reverseTransaction(transaction.accountId, transaction.toAccountId, transaction.amount, transaction.type)
-            if (transaction.type == TransactionType.EXPENSE) {
+            if (transaction.type == TransactionType.EXPENSE && !transaction.isExcludedFromTotals) {
                 updateBudgetSpent(transaction.budgetId, -transaction.amount)
             }
         }

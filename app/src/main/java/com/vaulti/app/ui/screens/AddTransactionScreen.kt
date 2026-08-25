@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -78,6 +79,9 @@ fun AddTransactionScreen(
         mutableStateOf(
             existingTransaction?.let { tx -> budgets.find { it.id == tx.budgetId } }
         )
+    }
+    var isExcluded by remember(existingTransaction) {
+        mutableStateOf(existingTransaction?.isExcludedFromTotals ?: false)
     }
     var showAccountDropdown by remember { mutableStateOf(false) }
     var showToAccountDropdown by remember { mutableStateOf(false) }
@@ -330,6 +334,25 @@ fun AddTransactionScreen(
 
             }
 
+            if (selectedType != TransactionType.TRANSFER) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Checkbox(
+                        checked = isExcluded,
+                        onCheckedChange = { isExcluded = it }
+                    )
+                    Text(
+                        text = if (selectedType == TransactionType.INCOME)
+                            "Don't count as income"
+                        else
+                            "Don't count as expense",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
@@ -338,6 +361,7 @@ fun AddTransactionScreen(
                     if (amountValue <= 0) return@Button
                     val account = selectedAccount ?: return@Button
                     val budgetId = if (selectedType == TransactionType.EXPENSE) selectedBudget?.id else null
+                    val excluded = if (selectedType == TransactionType.TRANSFER) false else isExcluded
                     if (isEditing) {
                         transactionViewModel.updateTransaction(
                             transaction = existingTransaction,
@@ -348,7 +372,8 @@ fun AddTransactionScreen(
                             note = note,
                             date = date,
                             toAccountId = if (selectedType == TransactionType.TRANSFER) selectedToAccount?.id else null,
-                            budgetId = budgetId
+                            budgetId = budgetId,
+                            isExcludedFromTotals = excluded
                         )
                     } else {
                         transactionViewModel.addTransaction(
@@ -359,7 +384,8 @@ fun AddTransactionScreen(
                             note = note,
                             date = date,
                             toAccountId = if (selectedType == TransactionType.TRANSFER) selectedToAccount?.id else null,
-                            budgetId = budgetId
+                            budgetId = budgetId,
+                            isExcludedFromTotals = excluded
                         )
                     }
                     onNavigateBack()
