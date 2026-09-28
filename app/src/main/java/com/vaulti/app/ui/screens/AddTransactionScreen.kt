@@ -420,8 +420,9 @@ fun AddTransactionScreen(
                 TextButton(
                     onClick = {
                         if (newCategoryName.isNotBlank()) {
-                            transactionViewModel.addCategory(newCategoryName)
-                            category = newCategoryName
+                            val name = newCategoryName.trim()
+                            transactionViewModel.addCategory(name)
+                            category = name
                             showAddCategoryDialog = false
                         }
                     },

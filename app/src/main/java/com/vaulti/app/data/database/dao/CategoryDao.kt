@@ -21,6 +21,21 @@ interface CategoryDao {
     @Delete
     suspend fun delete(category: Category)
 
+    // Case-insensitive lookup, whitespace-tolerant. TRIM() guards against
+    // names that differ only by surrounding spaces.
+    @Query("SELECT * FROM categories WHERE TRIM(name) = TRIM(:name) COLLATE NOCASE LIMIT 1")
+    suspend fun findByName(name: String): Category?
+
+    // Returns the id of the existing category when the name is already taken,
+    // otherwise inserts and returns the new id. Atomic, so concurrent adds of
+    // the same name cannot both insert.
+    @Transaction
+    suspend fun insertDeduped(category: Category): Long {
+        val existing = findByName(category.name)
+        if (existing != null) return existing.id
+        return insert(category)
+    }
+
     @Query("SELECT id FROM categories")
     suspend fun getAllIds(): List<Long>
 
