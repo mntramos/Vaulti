@@ -20,6 +20,12 @@ class CategoryRepository(
         return id
     }
 
+    // Restores an exported category with its original id (import path).
+    suspend fun insert(category: Category) {
+        categoryDao.insert(category)
+        syncManager.pushCategory(category)
+    }
+
     suspend fun delete(category: Category) {
         categoryDao.delete(category)
         syncManager.deleteCategory(category.id)

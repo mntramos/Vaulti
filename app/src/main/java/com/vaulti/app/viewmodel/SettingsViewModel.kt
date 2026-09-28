@@ -65,9 +65,10 @@ class SettingsViewModel @Inject constructor(
             val transactions = transactionRepository.getAll().first()
             val budgets = budgetRepository.getAll().first()
             val goals = goalRepository.getAll().first()
+            val allCategories = categoryRepository.getAll().first()
 
             val root = JSONObject()
-            root.put("version", 1)
+            root.put("version", 2)
             root.put("exportedAt", System.currentTimeMillis())
 
             val accountsArr = JSONArray()
@@ -135,6 +136,15 @@ class SettingsViewModel @Inject constructor(
             }
             root.put("goals", goalsArr)
 
+            val categoriesArr = JSONArray()
+            allCategories.forEach { c ->
+                categoriesArr.put(JSONObject().apply {
+                    put("id", c.id)
+                    put("name", c.name)
+                })
+            }
+            root.put("categories", categoriesArr)
+
             withContext(Dispatchers.IO) {
                 context.contentResolver.openOutputStream(uri)?.use { outputStream ->
                     outputStream.write(root.toString(2).toByteArray())
@@ -155,6 +165,21 @@ class SettingsViewModel @Inject constructor(
 
             withContext(Dispatchers.IO) {
                 database.clearAllTables()
+
+                // v1 exports predate the categories array; fall back to the
+                // default set, which TransactionViewModel re-seeds when empty.
+                val categoriesArr = root.optJSONArray("categories")
+                if (categoriesArr != null) {
+                    for (i in 0 until categoriesArr.length()) {
+                        val obj = categoriesArr.getJSONObject(i)
+                        categoryRepository.insert(
+                            Category(
+                                id = obj.getLong("id"),
+                                name = obj.getString("name")
+                            )
+                        )
+                    }
+                }
 
                 val accountsArr = root.getJSONArray("accounts")
                 for (i in 0 until accountsArr.length()) {
