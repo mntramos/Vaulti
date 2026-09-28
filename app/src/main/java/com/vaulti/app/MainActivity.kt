@@ -2,6 +2,7 @@ package com.vaulti.app
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.fadeIn
@@ -141,6 +142,13 @@ fun VaultiMainScreen(
                 restoreState = true
             }
         }
+    }
+
+    // System back on a non-Home tab returns to Home instead of exiting the app.
+    // Overlay screens (account detail, settings, add/edit transaction, categories)
+    // keep the default pop-to-previous behavior.
+    BackHandler(enabled = showBottomBar && currentRoute != "dashboard") {
+        navigateToTab("dashboard")
     }
 
     Scaffold(
