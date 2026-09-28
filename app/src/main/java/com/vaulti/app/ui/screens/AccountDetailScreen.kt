@@ -1,5 +1,6 @@
 package com.vaulti.app.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.vaulti.app.data.database.entity.AccountType
 import com.vaulti.app.data.database.entity.Transaction
 import com.vaulti.app.data.database.entity.TransactionType
 import com.vaulti.app.ui.FormatUtils
@@ -57,7 +59,7 @@ fun AccountDetailScreen(
     val accountMap = remember(accounts) { accounts.associateBy { it.id } }
 
     var showMenu by remember { mutableStateOf(false) }
-    var showRenameDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     var filterType by remember { mutableStateOf<TransactionType?>(null) }
@@ -104,10 +106,10 @@ fun AccountDetailScreen(
                             onDismissRequest = { showMenu = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text("Rename") },
+                                text = { Text("Edit") },
                                 onClick = {
                                     showMenu = false
-                                    showRenameDialog = true
+                                    showEditDialog = true
                                 }
                             )
                             DropdownMenuItem(
@@ -329,35 +331,95 @@ fun AccountDetailScreen(
         }
     }
 
-    if (showRenameDialog && account != null) {
+    if (showEditDialog && account != null) {
         var newName by remember { mutableStateOf(account.name) }
+        var newType by remember { mutableStateOf(account.type) }
+        var newIsLiability by remember { mutableStateOf(account.isLiability) }
+        var showTypeDropdown by remember { mutableStateOf(false) }
         AlertDialog(
-            onDismissRequest = { showRenameDialog = false },
-            title = { Text("Rename Account") },
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("Edit Account") },
             text = {
-                OutlinedTextField(
-                    value = newName,
-                    onValueChange = { newName = it },
-                    label = { Text("Account Name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(
+                        value = newName,
+                        onValueChange = { newName = it },
+                        label = { Text("Account Name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    ExposedDropdownMenuBox(
+                        expanded = showTypeDropdown,
+                        onExpandedChange = { showTypeDropdown = it }
+                    ) {
+                        OutlinedTextField(
+                            value = newType.displayName,
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("Type") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showTypeDropdown) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true)
+                        )
+                        ExposedDropdownMenu(
+                            expanded = showTypeDropdown,
+                            onDismissRequest = { showTypeDropdown = false }
+                        ) {
+                            AccountType.entries.sortedBy { it.displayName }.forEach { type ->
+                                DropdownMenuItem(
+                                    text = { Text(type.displayName) },
+                                    onClick = {
+                                        newType = type
+                                        if (type != AccountType.OTHER) newIsLiability = type.isLiability
+                                        showTypeDropdown = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    if (newType == AccountType.OTHER) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable { newIsLiability = !newIsLiability }
+                        ) {
+                            Checkbox(
+                                checked = newIsLiability,
+                                onCheckedChange = { newIsLiability = it }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("This is a liability / debt")
+                        }
+                    }
+                }
             },
             confirmButton = {
                 TextButton(
                     onClick = {
                         if (newName.isNotBlank()) {
-                            accountViewModel.updateAccount(account.copy(name = newName))
-                            showRenameDialog = false
+                            val liabilityFlipped = newType.isLiability != account.isLiability
+                            accountViewModel.updateAccount(
+                                account.copy(
+                                    name = newName.trim(),
+                                    type = newType,
+                                    isLiability = newType.isLiability,
+                                    color = newType.defaultColor,
+                                    balance = if (liabilityFlipped) -account.balance else account.balance,
+                                    lastModified = System.currentTimeMillis()
+                                )
+                            )
+                            showEditDialog = false
                         }
                     },
                     enabled = newName.isNotBlank()
                 ) {
-                    Text("Rename")
+                    Text("Save")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showRenameDialog = false }) {
+                TextButton(onClick = { showEditDialog = false }) {
                     Text("Cancel")
                 }
             }
