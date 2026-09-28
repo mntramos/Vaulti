@@ -19,7 +19,7 @@ import com.vaulti.app.data.database.entity.Transaction
 
 @Database(
     entities = [Account::class, Transaction::class, Budget::class, Goal::class, Category::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class VaultiDatabase : RoomDatabase() {
@@ -41,6 +41,18 @@ abstract class VaultiDatabase : RoomDatabase() {
             }
         }
 
+        // Data-only cleanup: keep one row per case-insensitive trimmed name.
+        // Transactions reference categories by name string, so dropping
+        // duplicate rows breaks no links.
+        private val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "DELETE FROM categories WHERE id NOT IN " +
+                        "(SELECT MIN(id) FROM categories GROUP BY LOWER(TRIM(name)))"
+                )
+            }
+        }
+
         fun getDatabase(context: Context): VaultiDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -48,7 +60,7 @@ abstract class VaultiDatabase : RoomDatabase() {
                     VaultiDatabase::class.java,
                     "vaulti_database"
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

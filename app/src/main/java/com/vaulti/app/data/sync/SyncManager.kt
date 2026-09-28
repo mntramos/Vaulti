@@ -230,8 +230,10 @@ class SyncManager @Inject constructor(
             val categorySnapshot = baseRef.collection("categories").get().await()
             for (doc in categorySnapshot.documents) {
                 doc.data?.toCategory(cryptoManager, currentUid)?.let {
-                    firestoreIds.add(it.id)
-                    categoryDao.insert(it)
+                    // Dedup: the same name can arrive under different ids
+                    // (two devices, re-add after delete). Whichever row is
+                    // kept, it must stay in the retained-id set.
+                    firestoreIds.add(categoryDao.insertDeduped(it))
                 }
             }
             val staleCategoryIds = categoryDao.getAllIds().toSet() - firestoreIds
@@ -336,7 +338,7 @@ class SyncManager @Inject constructor(
                     return@forEach
                 }
                 val category = change.document.data.toCategory(cryptoManager, currentUid) ?: return@forEach
-                scope.launch { database.categoryDao().insert(category) }
+                scope.launch { database.categoryDao().insertDeduped(category) }
             }
         }
         listeners.add(categoryReg)
